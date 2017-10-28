@@ -231,6 +231,8 @@ proc pHandleWMKEYDOWNOrWMCHAR(window: Window, control: Control, unicode: int, ke
   windowEvent.character = unicode.pUnicodeCharToUtf8
 
   window.handleKeyDownEvent(windowEvent)
+  if windowEvent.cancel:
+    return true
 
   if control != nil:
     var controlEvent = new ControlKeyEvent
@@ -412,7 +414,7 @@ method run*(dialog: OpenFileDialog) =
   var ofn: OpenFileName
   ofn.lStructSize = OpenFileName.sizeOf.int32
   ofn.nMaxFile = maxCharacters
-  ofn.lpstrInitialDir = getCurrentDir().pUtf8ToUtf16()
+  ofn.lpstrInitialDir = dialog.directory.pUtf8ToUtf16()
   ofn.Flags = OFN_FILEMUSTEXIST
   if dialog.multiple:
     ofn.Flags = ofn.Flags or OFN_ALLOWMULTISELECT or OFN_EXPLORER
@@ -444,7 +446,7 @@ method run(dialog: SaveFileDialog) =
   var ofn: OpenFileName
   ofn.lStructSize = OpenFileName.sizeOf.int32
   ofn.nMaxFile = maxCharacters
-  ofn.lpstrInitialDir = getCurrentDir().pUtf8ToUtf16()
+  ofn.lpstrInitialDir = dialog.directory.pUtf8ToUtf16()
   if dialog.defaultExtension.len > 0:
     ofn.lpstrDefExt = pUtf8ToUtf16(dialog.defaultExtension)
     ofn.lpstrFilter = pUtf8ToUtf16(dialog.defaultExtension & "\0*." & dialog.defaultExtension & "\0All files\0*.*")

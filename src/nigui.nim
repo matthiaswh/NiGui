@@ -241,6 +241,7 @@ type
     key*: Key
     unicode*: int
     character*: string # UTF-8 character
+    cancel*: bool
   WindowKeyProc* = proc(event: WindowKeyEvent)
   
   WindowVisibleProc* = proc()
@@ -249,7 +250,6 @@ type
 
   ControlDisposeEvent* = ref object
     control*: Control
-    cancel*: bool
   ControlDisposeProc* = proc(event: ControlDisposeEvent)
 
   DrawEvent* = ref object
