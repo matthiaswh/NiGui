@@ -11,6 +11,8 @@ type
 
   NativeButton* = ref object of Button
 
+  NativeToggleButton* = ref object of ToggleButton
+
   NativeLabel* = ref object of Label
 
   NativeTextBox* = ref object of TextBox

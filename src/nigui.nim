@@ -243,7 +243,7 @@ type
     character*: string # UTF-8 character
     cancel*: bool
   WindowKeyProc* = proc(event: WindowKeyEvent)
-  
+
   WindowVisibleProc* = proc()
 
   # Control events:
@@ -274,6 +274,10 @@ type
   ClickEvent* = ref object
     control*: Control
   ClickProc* = proc(event: ClickEvent)
+
+  ToggleEvent* = ref object
+    control*: Control
+  ToggleProc* = proc(event: ToggleEvent)
 
   ControlKeyEvent* = ref object
     control*: Control
@@ -318,6 +322,12 @@ type
   Button* = ref object of ControlImpl
     fText: string
     fEnabled: bool
+
+  ToggleButton* = ref object of ControlImpl
+    fText: string
+    fEnabled: bool
+    fToggled: bool
+    fOnToggle: ToggleProc
 
   Label* = ref object of ControlImpl
     fText: string
@@ -846,6 +856,30 @@ method `text=`*(button: Button, text: string)
 
 method enabled*(button: Button): bool
 method `enabled=`*(button: Button, enabled: bool)
+
+
+# ----------------------------------------------------------------------------------------
+#                                        ToggleButton
+# ----------------------------------------------------------------------------------------
+
+proc newToggleButton*(text = ""): ToggleButton
+
+proc init*(toggleButton: ToggleButton)
+proc init*(toggleButton: NativeToggleButton)
+
+method text*(toggleButton: ToggleButton): string
+method `text=`*(toggleButton: ToggleButton, text: string)
+
+method enabled*(toggleButton: ToggleButton): bool
+method `enabled=`*(toggleButton: ToggleButton, enabled: bool)
+
+method toggled*(toggleButton: ToggleButton): bool
+method `toggled=`*(toggleButton: ToggleButton, toggled: bool)
+
+method onToggle*(toggleButton: ToggleButton): ToggleProc
+method `onToggle=`*(toggleButton: ToggleButton, callback: ToggleProc)
+
+method handleToggleEvent(toggleButton: ToggleButton, event: ToggleEvent)
 
 
 # ----------------------------------------------------------------------------------------
@@ -2359,6 +2393,57 @@ method `enabled=`(button: Button, enabled: bool) = discard
 
 method `onDraw=`(container: NativeButton, callback: DrawProc) = raiseError("NativeButton does not allow onDraw.")
 
+
+# ----------------------------------------------------------------------------------------
+#                                        ToggleButton
+# ----------------------------------------------------------------------------------------
+
+proc newToggleButton(text = ""): ToggleButton =
+  result = new NativeToggleButton
+  result.NativeToggleButton.init()
+  result.text = text
+
+proc init(toggleButton: ToggleButton) =
+  toggleButton.ControlImpl.init()
+  toggleButton.fText = ""
+  toggleButton.fOnClick = nil
+  toggleButton.fWidthMode = WidthMode_Auto
+  toggleButton.fHeightMode = HeightMode_Auto
+  # toggleButton.minWidth = 15
+  # toggleButton.minHeight = 15
+  toggleButton.enabled = true
+
+method text(toggleButton: ToggleButton): string = toggleButton.fText
+
+method `text=`(toggleButton: ToggleButton, text: string) =
+  toggleButton.fText = text
+  toggleButton.tag = text
+  # toggleButton.triggerRelayoutIfModeIsAuto()
+
+# method naturalWidth(toggleButton: ToggleButton): int = toggleButtonbutton.getTextWidth(button.text) + 20
+
+# method naturalHeight(toggleButton: ToggleButton): int = button.getTextLineHeight() * button.text.countLines + 12
+
+method enabled(toggleButton: ToggleButton): bool = toggleButton.fEnabled
+
+method `enabled=`(toggleButton: ToggleButton, enabled: bool) = discard
+  # has to be implemented by NativeToggleButton
+
+method toggled(toggleButton: ToggleButton): bool = toggleButton.fToggled
+
+method `toggled=`(toggleButton: ToggleButton, toggled: bool) = discard
+  # has to be implemented by NativeToggleButton
+
+method `onDraw=`(toggleButton: ToggleButton, callback: DrawProc) = raiseError("NativeToggleButton does not allow onDraw.")
+
+method onToggle(toggleButton: ToggleButton): ToggleProc = toggleButton.fOnToggle
+method `onToggle=`(toggleButton: ToggleButton, callback: ToggleProc) = toggleButton.fOnToggle = callback
+
+method handleToggleEvent(toggleButton: ToggleButton, event: ToggleEvent) =
+  # can be overridden by custom button
+  let callback = toggleButton.onToggle
+  if callback != nil:
+    callback(event)
 
 # ----------------------------------------------------------------------------------------
 #                                        Label
