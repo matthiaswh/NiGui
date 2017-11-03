@@ -275,10 +275,6 @@ type
     control*: Control
   ClickProc* = proc(event: ClickEvent)
 
-  ToggleEvent* = ref object
-    control*: Control
-  ToggleProc* = proc(event: ToggleEvent)
-
   ControlKeyEvent* = ref object
     control*: Control
     key*: Key
@@ -290,6 +286,11 @@ type
   TextChangeEvent* = ref object
     control*: Control
   TextChangeProc* = proc(event: TextChangeEvent)
+
+  ToggleEvent* = ref object
+    control*: Control
+    toggled*: bool
+  ToggleProc* = proc(event: ToggleEvent)
 
   CheckBoxToggleEvent* = ref object
     control*: Control

@@ -1221,55 +1221,107 @@ method `enabled=`(button: NativeButton, enabled: bool) =
 
 
 # ----------------------------------------------------------------------------------------
-#                                      Checkbox
+#                                      ToggleButton
 # ----------------------------------------------------------------------------------------
 
-var pCheckboxOrigWndProc: pointer
+var pToggleButtonOrigWndProc: pointer
 
-proc pCheckboxWndProc(hWnd: pointer, uMsg: int32, wParam, lParam: pointer): pointer {.cdecl.} =
+proc pToggleButtonWndProc(hWnd: pointer, uMsg: int32, wParam, lParam: pointer): pointer {.cdecl.} =
   case uMsg
   of WM_KEYDOWN, WM_LBUTTONUP:
-    let checkbox = cast[Checkbox](pGetWindowLongPtr(hWnd, GWLP_USERDATA))
+    let toggleButton = cast[ToggleButton](pGetWindowLongPtr(hWnd, GWLP_USERDATA))
     let keyCode = if uMsg == WM_KEYDOWN: cast[int](wParam) else: 32
-    if checkbox != nil and keyCode == 32:
-      checkbox.fChecked = not checkbox.fChecked
-      discard SendMessageA(checkbox.fHandle, BM_SETCHECK, cast[pointer](checkbox.fChecked), nil)
+    if toggleButton != nil and keyCode == 32:
+      toggleButton.fToggled = not toggleButton.fToggled
+      discard SendMessageA(toggleButton.fHandle, BM_SETCHECK, cast[pointer](toggleButton.fToggled), nil)
 
-      var event = new CheckboxToggleEvent
-      event.control = checkbox
-      event.checked = checkbox.fChecked
-      checkbox.handleToggleEvent(event)
+      var event = new ToggleEvent
+      event.control = toggleButton
+      event.toggled = toggleButton.fToggled
+      toggleButton.handleToggleEvent(event)
   else:
     discard
-  result = pCommonControlWndProc(pCheckboxOrigWndProc, hWnd, uMsg, wParam, lParam)
+  result = pCommonControlWndProc(pToggleButtonOrigWndProc, hWnd, uMsg, wParam, lParam)
 
-proc init(checkbox: NativeCheckbox) =
-  checkbox.fHandle = pCreateWindowExWithUserdata(
+proc init(toggleButton: NativeToggleButton) =
+  toggleButton.fHandle = pCreateWindowExWithUserdata(
+    "BUTTON",
+    WS_CHILD or BS_CHECKBOX or WS_TABSTOP or BS_PUSHLIKE,
+    0,
+    pDefaultParentWindow,
+    cast[pointer](toggleButton)
+  )
+  # WS_TABSTOP does not work, why?
+  pToggleButtonOrigWndProc = pSetWindowLongPtr(toggleButton.fHandle, GWLP_WNDPROC, pToggleButtonWndProc)
+  toggleButton.ToggleButton.init()
+
+method `text=`(toggleButton: NativeToggleButton, text: string) =
+  procCall toggleButton.ToggleButton.`text=`(text)
+  pSetWindowText(toggleButton.fHandle, text)
+
+method enabled(toggleButton: NativeToggleButton): bool = toggleButton.fEnabled
+
+method `enabled=`(toggleButton: NativeToggleButton, enabled: bool) =
+  toggleButton.fEnabled = enabled
+  discard EnableWindow(toggleButton.fHandle, enabled)
+
+method checked(toggleButton: NativeToggleButton): bool = toggleButton.fToggled
+
+method `checked=`(toggleButton: NativeToggleButton, checked: bool) =
+  toggleButton.fToggled = checked
+  discard SendMessageA(toggleButton.fHandle, BM_SETCHECK, cast[pointer](checked), nil)
+
+
+# ----------------------------------------------------------------------------------------
+#                                      CheckBox
+# ----------------------------------------------------------------------------------------
+
+var pCheckBoxOrigWndProc: pointer
+
+proc pCheckBoxWndProc(hWnd: pointer, uMsg: int32, wParam, lParam: pointer): pointer {.cdecl.} =
+  case uMsg
+  of WM_KEYDOWN, WM_LBUTTONUP:
+    let checkBox = cast[CheckBox](pGetWindowLongPtr(hWnd, GWLP_USERDATA))
+    let keyCode = if uMsg == WM_KEYDOWN: cast[int](wParam) else: 32
+    if checkBox != nil and keyCode == 32:
+      checkBox.fChecked = not checkBox.fChecked
+      discard SendMessageA(checkBox.fHandle, BM_SETCHECK, cast[pointer](checkBox.fChecked), nil)
+
+      var event = new CheckBoxToggleEvent
+      event.control = checkBox
+      event.checked = checkBox.fChecked
+      checkBox.handleToggleEvent(event)
+  else:
+    discard
+  result = pCommonControlWndProc(pCheckBoxOrigWndProc, hWnd, uMsg, wParam, lParam)
+
+proc init(checkbox: NativeCheckBox) =
+  checkBox.fHandle = pCreateWindowExWithUserdata(
     "BUTTON",
     WS_CHILD or BS_CHECKBOX or WS_TABSTOP,
     0,
     pDefaultParentWindow,
-    cast[pointer](checkbox)
+    cast[pointer](checkBox)
   )
   # WS_TABSTOP does not work, why?
-  pCheckboxOrigWndProc = pSetWindowLongPtr(checkbox.fHandle, GWLP_WNDPROC, pCheckboxWndProc)
-  checkbox.Checkbox.init()
+  pCheckboxOrigWndProc = pSetWindowLongPtr(checkBox.fHandle, GWLP_WNDPROC, pCheckBoxWndProc)
+  checkBox.CheckBox.init()
 
-method `text=`(checkbox: NativeCheckbox, text: string) =
-  procCall checkbox.Checkbox.`text=`(text)
-  pSetWindowText(checkbox.fHandle, text)
+method `text=`(checkBox: NativeCheckBox, text: string) =
+  procCall checkBox.CheckBox.`text=`(text)
+  pSetWindowText(checkBox.fHandle, text)
 
-method enabled(checkbox: NativeCheckbox): bool = checkbox.fEnabled
+method enabled(checkBox: NativeCheckBox): bool = checkBox.fEnabled
 
-method `enabled=`(checkbox: NativeCheckbox, enabled: bool) =
-  checkbox.fEnabled = enabled
-  discard EnableWindow(checkbox.fHandle, enabled)
+method `enabled=`(checkBox: NativeCheckBox, enabled: bool) =
+  checkBox.fEnabled = enabled
+  discard EnableWindow(checkBox.fHandle, enabled)
 
-method checked(checkbox: NativeCheckbox): bool = checkbox.fChecked
+method checked(checkBox: NativeCheckBox): bool = checkBox.fChecked
 
-method `checked=`(checkbox: NativeCheckbox, checked: bool) =
-  checkbox.fChecked = checked
-  discard SendMessageA(checkbox.fHandle, BM_SETCHECK, cast[pointer](checked), nil)
+method `checked=`(checkBox: NativeCheckBox, checked: bool) =
+  checkBox.fChecked = checked
+  discard SendMessageA(checkBox.fHandle, BM_SETCHECK, cast[pointer](checked), nil)
 
 # ----------------------------------------------------------------------------------------
 #                                        Label

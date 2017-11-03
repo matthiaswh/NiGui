@@ -1089,10 +1089,11 @@ method `enabled=`(button: NativeButton, enabled: bool) =
 
 proc pToggleButtonToggleSignal(widget: pointer, event: var GdkEventButton, data: pointer): bool {.cdecl.} =
   let toggleButton = cast[NativeToggleButton](data)
+  toggleButton.toggled = not toggleButton.toggled
   var toggleEvent = new ToggleEvent
   toggleEvent.control = toggleButton
+  toggleEvent.toggled = toggleButton.toggled
   try:
-    toggleButton.toggled = not toggleButton.toggled
     toggleButton.handleToggleEvent(toggleEvent)
   except:
     handleException()
