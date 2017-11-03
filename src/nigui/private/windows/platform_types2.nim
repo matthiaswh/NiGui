@@ -11,7 +11,7 @@ type
 
   NativeButton* = ref object of Button
 
-  NativeCheckbox* = ref object of Checkbox
+  NativeCheckBox* = ref object of CheckBox
 
   NativeLabel* = ref object of Label
 

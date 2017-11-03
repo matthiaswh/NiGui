@@ -1,6 +1,6 @@
 # This example shows several controls of NiGui.
 
-import nigui
+import ../src/nigui
 
 app.init()
 
@@ -13,13 +13,17 @@ window.add(container)
 var button = newButton("Button")
 container.add(button)
 
+# Add a ToggleButton control:
+var toggleButton = newToggleButton("Toggle Button")
+container.add(toggleButton)
+
 # Add a Label control:
 var label = newLabel("Label")
 container.add(label)
 
-# Add a Checkbox control:
-var checkbox = newCheckbox("Checkbox")
-container.add(checkbox)
+# Add a CheckBox control:
+var checkBox = newCheckBox("CheckBox")
+container.add(checkBox)
 
 # Add a TextBox control:
 var textBox = newTextBox("TextBox")

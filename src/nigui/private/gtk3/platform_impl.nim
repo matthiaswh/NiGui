@@ -1084,6 +1084,42 @@ method `enabled=`(button: NativeButton, enabled: bool) =
 
 
 # ----------------------------------------------------------------------------------------
+#                                        Togglebutton
+# ----------------------------------------------------------------------------------------
+
+proc pToggleButtonToggleSignal(widget: pointer, event: var GdkEventButton, data: pointer): bool {.cdecl.} =
+  let toggleButton = cast[NativeToggleButton](data)
+  var toggleEvent = new ToggleEvent
+  toggleEvent.control = toggleButton
+  try:
+    toggleButton.toggled = not toggleButton.toggled
+    toggleButton.handleToggleEvent(toggleEvent)
+  except:
+    handleException()
+
+proc pAddToggleButtonToggleEvent(toggleButton: ToggleButton) =
+  gtk_widget_add_events(toggleButton.fHandle, GDK_BUTTON_RELEASE_MASK)
+  discard g_signal_connect_data(toggleButton.fHandle, "button-release-event", pToggleButtonToggleSignal, cast[pointer](toggleButton))
+  # discard g_signal_connect_data(toggleButton.fHandle, "toggled", pToggleButtonToggleSignal, cast[pointer](toggleButton))
+
+proc init(toggleButton: NativeToggleButton) =
+  toggleButton.fHandle = gtk_toggle_button_new()
+  toggleButton.ToggleButton.init()
+  toggleButton.pAddToggleButtonToggleEvent()
+
+method `text=`(toggleButton: NativeToggleButton, text: string) =
+  procCall toggleButton.ToggleButton.`text=`(text)
+  gtk_button_set_label(toggleButton.fHandle, text)
+
+method `enabled=`(toggleButton: NativeToggleButton, enabled: bool) =
+  toggleButton.fEnabled = enabled
+  gtk_widget_set_sensitive(toggleButton.fHandle, enabled)
+
+method `toggled=`(toggleButton: NativeToggleButton, toggled: bool) =
+  toggleButton.fToggled = toggled
+  gtk_toggle_button_set_active(toggleButton.fHandle, toggled)
+
+# ----------------------------------------------------------------------------------------
 #                                        Label
 # ----------------------------------------------------------------------------------------
 

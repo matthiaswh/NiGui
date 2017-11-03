@@ -243,7 +243,7 @@ type
     character*: string # UTF-8 character
     cancel*: bool
   WindowKeyProc* = proc(event: WindowKeyEvent)
-  
+
   WindowVisibleProc* = proc()
 
   # Control events:
@@ -275,6 +275,10 @@ type
     control*: Control
   ClickProc* = proc(event: ClickEvent)
 
+  ToggleEvent* = ref object
+    control*: Control
+  ToggleProc* = proc(event: ToggleEvent)
+
   ControlKeyEvent* = ref object
     control*: Control
     key*: Key
@@ -287,10 +291,10 @@ type
     control*: Control
   TextChangeProc* = proc(event: TextChangeEvent)
 
-  CheckboxToggleEvent* = ref object
+  CheckBoxToggleEvent* = ref object
     control*: Control
     checked*: bool
-  CheckboxToggleProc* = proc(event: CheckboxToggleEvent)
+  CheckBoxToggleProc* = proc(event: CheckBoxToggleEvent)
 
   # Other events:
 
@@ -324,11 +328,17 @@ type
     fText: string
     fEnabled: bool
 
-  Checkbox* = ref object of ControlImpl
+  CheckBox* = ref object of ControlImpl
     fText: string
     fEnabled: bool
     fChecked: bool
-    fOnToggle: CheckboxToggleProc
+    fOnToggle: CheckBoxToggleProc
+
+  ToggleButton* = ref object of ControlImpl
+    fText: string
+    fEnabled: bool
+    fToggled: bool
+    fOnToggle: ToggleProc
 
   Label* = ref object of ControlImpl
     fText: string
@@ -859,25 +869,49 @@ method enabled*(button: Button): bool
 method `enabled=`*(button: Button, enabled: bool)
 
 # ----------------------------------------------------------------------------------------
-#                                      Checkbox
+#                                      CheckBox
 # ----------------------------------------------------------------------------------------
 
-proc newCheckbox*(text = ""): Checkbox
+proc newCheckBox*(text = ""): CheckBox
 
-proc init*(checkbox: Checkbox)
-proc init*(checkbox: NativeCheckbox)
+proc init*(checkBox: CheckBox)
+proc init*(checkBox: NativeCheckBox)
 
-method text*(checkbox: Checkbox): string
-method `text=`*(checkbox: Checkbox, text: string)
+method text*(checkBox: CheckBox): string
+method `text=`*(checkBox: CheckBox, text: string)
 
-method onToggle*(checkbox: Checkbox): CheckboxToggleProc
-method `onToggle=`*(checkbox: Checkbox, callback: CheckboxToggleProc)
+method onToggle*(checkBox: CheckBox): CheckBoxToggleProc
+method `onToggle=`*(checkBox: CheckBox, callback: CheckBoxToggleProc)
 
-method enabled*(checkbox: Checkbox): bool
-method `enabled=`*(checkbox: Checkbox, enabled: bool)
+method enabled*(checkBox: CheckBox): bool
+method `enabled=`*(checkBox: CheckBox, enabled: bool)
 
-method checked*(checkbox: Checkbox): bool
-method `checked=`*(checkbox: Checkbox, checked: bool)
+method checked*(checkBox: CheckBox): bool
+method `checked=`*(checkBox: CheckBox, checked: bool)
+
+# ----------------------------------------------------------------------------------------
+#                                        ToggleButton
+# ----------------------------------------------------------------------------------------
+
+proc newToggleButton*(text = ""): ToggleButton
+
+proc init*(toggleButton: ToggleButton)
+proc init*(toggleButton: NativeToggleButton)
+
+method text*(toggleButton: ToggleButton): string
+method `text=`*(toggleButton: ToggleButton, text: string)
+
+method enabled*(toggleButton: ToggleButton): bool
+method `enabled=`*(toggleButton: ToggleButton, enabled: bool)
+
+method toggled*(toggleButton: ToggleButton): bool
+method `toggled=`*(toggleButton: ToggleButton, toggled: bool)
+
+method onToggle*(toggleButton: ToggleButton): ToggleProc
+method `onToggle=`*(toggleButton: ToggleButton, callback: ToggleProc)
+
+method handleToggleEvent(toggleButton: ToggleButton, event: ToggleEvent)
+
 
 # ----------------------------------------------------------------------------------------
 #                                        Label
@@ -2392,58 +2426,110 @@ method `onDraw=`(container: NativeButton, callback: DrawProc) = raiseError("Nati
 
 
 # ----------------------------------------------------------------------------------------
-#                                      Checkbox
+#                                      CheckBox
 # ----------------------------------------------------------------------------------------
 
-proc newCheckbox(text = ""): Checkbox =
-  result = new NativeCheckbox
-  result.NativeCheckbox.init()
+proc newCheckBox(text = ""): CheckBox =
+  result = new NativeCheckBox
+  result.NativeCheckBox.init()
   result.text = text
 
-proc init(checkbox: Checkbox) =
-  checkbox.ControlImpl.init()
-  checkbox.fText = ""
-  checkbox.fOnClick = nil
-  checkbox.fOnToggle = nil
-  checkbox.fWidthMode = WidthMode_Auto
-  checkbox.fHeightMode = HeightMode_Auto
-  checkbox.minWidth = 15
-  checkbox.minHeight = 15
-  checkbox.enabled = true
-  checkbox.checked = false
+proc init(checkBox: CheckBox) =
+  checkBox.ControlImpl.init()
+  checkBox.fText = ""
+  checkBox.fOnClick = nil
+  checkBox.fOnToggle = nil
+  checkBox.fWidthMode = WidthMode_Auto
+  checkBox.fHeightMode = HeightMode_Auto
+  checkBox.minWidth = 15
+  checkBox.minHeight = 15
+  checkBox.enabled = true
+  checkBox.checked = false
 
-method text(checkbox: Checkbox): string = checkbox.fText
+method text(checkBox: CheckBox): string = checkBox.fText
 
-method `text=`(checkbox: Checkbox, text: string) =
-  checkbox.fText = text
-  checkbox.tag = text
-  checkbox.triggerRelayoutIfModeIsAuto()
+method `text=`(checkBox: CheckBox, text: string) =
+  checkBox.fText = text
+  checkBox.tag = text
+  checkBox.triggerRelayoutIfModeIsAuto()
   # should be extended by NativeCheckbox
 
-method naturalWidth(checkbox: Checkbox): int = checkbox.getTextWidth(checkbox.text) + 20
+method naturalWidth(checkBox: CheckBox): int = checkBox.getTextWidth(checkBox.text) + 20
 
-method naturalHeight(checkbox: Checkbox): int = checkbox.getTextLineHeight() * checkbox.text.countLines + 12
+method naturalHeight(checkBox: CheckBox): int = checkBox.getTextLineHeight() * checkBox.text.countLines + 12
 
-method onToggle(checkbox: Checkbox): CheckboxToggleProc = checkbox.fOnToggle
-method `onToggle=`(checkbox: Checkbox, callback: CheckboxToggleProc) = checkbox.fOnToggle = callback
+method onToggle(checkBox: CheckBox): CheckBoxToggleProc = checkBox.fOnToggle
+method `onToggle=`(checkBox: CheckBox, callback: CheckBoxToggleProc) = checkBox.fOnToggle = callback
 
-method handleToggleEvent(checkbox: Checkbox, event: CheckboxToggleEvent) =
+method handleToggleEvent(checkBox: CheckBox, event: CheckBoxToggleEvent) =
   # can be overridden by custom button
-  let callback = checkbox.onToggle
+  let callback = checkBox.onToggle
   if callback != nil:
     callback(event)
 
-method enabled(checkbox: Checkbox): bool = checkbox.fEnabled
+method enabled(checkBox: CheckBox): bool = checkBox.fEnabled
 
-method `enabled=`(checkbox: Checkbox, enabled: bool) = discard
-  # has to be implemented by NativeCheckbox
+method `enabled=`(checkBox: CheckBox, enabled: bool) = discard
+  # has to be implemented by NativeCheckBox
 
-method checked(checkbox: Checkbox): bool = checkbox.fChecked
+method checked(checkBox: CheckBox): bool = checkBox.fChecked
 
-method `checked=`(checkbox: Checkbox, checked: bool) = discard
-  # has to be implemented by NativeCheckbox
+method `checked=`(checkBox: CheckBox, checked: bool) = discard
+  # has to be implemented by NativeCheckBbox
 
-method `onDraw=`(container: NativeCheckbox, callback: DrawProc) = raiseError("NativeCheckbox does not allow onDraw.")
+method `onDraw=`(container: NativeCheckBox, callback: DrawProc) = raiseError("NativeCheckBox does not allow onDraw.")
+
+
+# ----------------------------------------------------------------------------------------
+#                                        ToggleButton
+# ----------------------------------------------------------------------------------------
+
+proc newToggleButton(text = ""): ToggleButton =
+  result = new NativeToggleButton
+  result.NativeToggleButton.init()
+  result.text = text
+
+proc init(toggleButton: ToggleButton) =
+  toggleButton.ControlImpl.init()
+  toggleButton.fText = ""
+  toggleButton.fOnClick = nil
+  toggleButton.fWidthMode = WidthMode_Auto
+  toggleButton.fHeightMode = HeightMode_Auto
+  # toggleButton.minWidth = 15
+  # toggleButton.minHeight = 15
+  toggleButton.enabled = true
+
+method text(toggleButton: ToggleButton): string = toggleButton.fText
+
+method `text=`(toggleButton: ToggleButton, text: string) =
+  toggleButton.fText = text
+  toggleButton.tag = text
+  # toggleButton.triggerRelayoutIfModeIsAuto()
+
+# method naturalWidth(toggleButton: ToggleButton): int = toggleButtonbutton.getTextWidth(button.text) + 20
+
+# method naturalHeight(toggleButton: ToggleButton): int = button.getTextLineHeight() * button.text.countLines + 12
+
+method enabled(toggleButton: ToggleButton): bool = toggleButton.fEnabled
+
+method `enabled=`(toggleButton: ToggleButton, enabled: bool) = discard
+  # has to be implemented by NativeToggleButton
+
+method toggled(toggleButton: ToggleButton): bool = toggleButton.fToggled
+
+method `toggled=`(toggleButton: ToggleButton, toggled: bool) = discard
+  # has to be implemented by NativeToggleButton
+
+method `onDraw=`(toggleButton: ToggleButton, callback: DrawProc) = raiseError("NativeToggleButton does not allow onDraw.")
+
+method onToggle(toggleButton: ToggleButton): ToggleProc = toggleButton.fOnToggle
+method `onToggle=`(toggleButton: ToggleButton, callback: ToggleProc) = toggleButton.fOnToggle = callback
+
+method handleToggleEvent(toggleButton: ToggleButton, event: ToggleEvent) =
+  # can be overridden by custom button
+  let callback = toggleButton.onToggle
+  if callback != nil:
+    callback(event)
 
 
 # ----------------------------------------------------------------------------------------
