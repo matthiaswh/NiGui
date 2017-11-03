@@ -17,13 +17,13 @@ container.add(button)
 var toggleButton = newToggleButton("Toggle Button")
 container.add(toggleButton)
 
-# Add a Label control:
-var label = newLabel("Label")
-container.add(label)
-
 # Add a CheckBox control:
 var checkBox = newCheckBox("CheckBox")
 container.add(checkBox)
+
+# Add a Label control:
+var label = newLabel("Label")
+container.add(label)
 
 # Add a TextBox control:
 var textBox = newTextBox("TextBox")

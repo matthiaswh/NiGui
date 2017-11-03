@@ -1084,7 +1084,7 @@ method `enabled=`(button: NativeButton, enabled: bool) =
 
 
 # ----------------------------------------------------------------------------------------
-#                                        Togglebutton
+#                                        ToggleButton
 # ----------------------------------------------------------------------------------------
 
 proc pToggleButtonToggleSignal(widget: pointer, event: var GdkEventButton, data: pointer): bool {.cdecl.} =
@@ -1118,6 +1118,44 @@ method `enabled=`(toggleButton: NativeToggleButton, enabled: bool) =
 method `toggled=`(toggleButton: NativeToggleButton, toggled: bool) =
   toggleButton.fToggled = toggled
   gtk_toggle_button_set_active(toggleButton.fHandle, toggled)
+
+
+# ----------------------------------------------------------------------------------------
+#                                        CheckBox
+# ----------------------------------------------------------------------------------------
+
+proc pCheckBoxToggleSignal(widget: pointer, event: var GdkEventButton, data: pointer): bool {.cdecl.} =
+  let checkBox = cast[NativeCheckBox](data)
+  var checkBoxToggleEvent = new CheckBoxToggleEvent
+  checkBoxToggleEvent.control = checkBox
+  checkBoxToggleEvent.checked = not checkBox.checked
+  try:
+    checkBox.checked = not checkBox.checked
+    checkBox.handleToggleEvent(checkBoxToggleEvent)
+  except:
+    handleException()
+
+proc pAddCheckBoxToggleEvent(checkBox: CheckBox) =
+  gtk_widget_add_events(checkBox.fHandle, GDK_BUTTON_RELEASE_MASK)
+  discard g_signal_connect_data(checkBox.fHandle, "button-release-event", pCheckBoxToggleSignal, cast[pointer](checkBox))
+
+proc init(checkBox: NativeCheckBox) =
+  checkBox.fHandle = gtk_check_button_new()
+  checkBox.CheckBox.init()
+  checkBox.pAddCheckBoxToggleEvent()
+
+method `text=`(checkBox: NativeCheckBox, text: string) =
+  procCall checkBox.CheckBox.`text=`(text)
+  gtk_button_set_label(checkBox.fHandle, text)
+
+method `enabled=`(checkBox: NativeCheckBox, enabled: bool) =
+  checkBox.fEnabled = enabled
+  gtk_widget_set_sensitive(checkBox.fHandle, enabled)
+
+method `checked=`(checkBox: NativeCheckBox, checked: bool) =
+  checkBox.fChecked = checked
+  gtk_toggle_button_set_active(checkBox.fHandle, checked)
+
 
 # ----------------------------------------------------------------------------------------
 #                                        Label

@@ -2495,8 +2495,8 @@ proc init(toggleButton: ToggleButton) =
   toggleButton.fOnClick = nil
   toggleButton.fWidthMode = WidthMode_Auto
   toggleButton.fHeightMode = HeightMode_Auto
-  # toggleButton.minWidth = 15
-  # toggleButton.minHeight = 15
+  toggleButton.minWidth = 15
+  toggleButton.minHeight = 15
   toggleButton.enabled = true
 
 method text(toggleButton: ToggleButton): string = toggleButton.fText
@@ -2504,11 +2504,11 @@ method text(toggleButton: ToggleButton): string = toggleButton.fText
 method `text=`(toggleButton: ToggleButton, text: string) =
   toggleButton.fText = text
   toggleButton.tag = text
-  # toggleButton.triggerRelayoutIfModeIsAuto()
+  toggleButton.triggerRelayoutIfModeIsAuto()
 
-# method naturalWidth(toggleButton: ToggleButton): int = toggleButtonbutton.getTextWidth(button.text) + 20
+method naturalWidth(toggleButton: ToggleButton): int = toggleButton.getTextWidth(toggleButton.text) + 20
 
-# method naturalHeight(toggleButton: ToggleButton): int = button.getTextLineHeight() * button.text.countLines + 12
+method naturalHeight(toggleButton: ToggleButton): int = toggleButton.getTextLineHeight() * toggleButton.text.countLines + 12
 
 method enabled(toggleButton: ToggleButton): bool = toggleButton.fEnabled
 

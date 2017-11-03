@@ -332,14 +332,21 @@ proc gtk_label_set_yalign*(label: pointer, yalign: cfloat) {.importc: "gtk_label
 proc gtk_box_pack_start*(box, child: pointer, expand, fill: cint, padding: cint) {.importc: "gtk_box_pack_start", libgtk3.}
 
 proc gtk_button_new*(): pointer {.importc: "gtk_button_new", libgtk3.}
+# proc gtk_button_new_with_label*(label: cstring): pointer {.importc: "gtk_button_new_with_label", libgtk3.}
+# proc gtk_button_get_label*(button: pointer): cstring {.importc: "gtk_button_get_label", libgtk3.}
+proc gtk_button_set_label*(button: pointer, label: cstring) {.importc: "gtk_button_set_label", libgtk3.}
+
 proc gtk_toggle_button_new*(): pointer {.importc: "gtk_toggle_button_new", libgtk3.}
 proc gtk_toggle_button_new_with_label*(label: cstring): pointer {.importc: "gtk_toggle_button_new_with_label", libgtk3.}
 proc gtk_toggle_button_get_active*(toggle_button: pointer): bool {.importc: "gtk_toggle_button_get_active", libgtk3.}
 proc gtk_toggle_button_toggled*(toggle_button: pointer): bool {.importc: "gtk_toggle_button_toggled", libgtk3.}
 proc gtk_toggle_button_set_active*(toggle_button: pointer, is_active: bool) {.importc: "gtk_toggle_button_set_active", libgtk3.}
-# proc gtk_button_new_with_label*(label: cstring): pointer {.importc: "gtk_button_new_with_label", libgtk3.}
-# proc gtk_button_get_label*(button: pointer): cstring {.importc: "gtk_button_get_label", libgtk3.}
-proc gtk_button_set_label*(button: pointer, label: cstring) {.importc: "gtk_button_set_label", libgtk3.}
+
+proc gtk_check_button_new*(): pointer {.importc: "gtk_check_button_new", libgtk3.}
+proc gtk_check_button_new_with_label*(label: cstring): pointer {.importc: "gtk_check_button_new_with_label", libgtk3.}
+# proc gtk_toggle_button_get_active*(toggle_button: pointer): bool {.importc: "gtk_toggle_button_get_active", libgtk3.}
+# proc gtk_toggle_button_toggled*(toggle_button: pointer): bool {.importc: "gtk_toggle_button_toggled", libgtk3.}
+# proc gtk_toggle_button_set_active*(toggle_button: pointer, is_active: bool) {.importc: "gtk_toggle_button_set_active", libgtk3.}
 
 proc gtk_entry_new*(): pointer {.importc: "gtk_entry_new", libgtk3.}
 proc gtk_entry_set_text*(entry: pointer, text: cstring) {.importc: "gtk_entry_set_text", libgtk3.}
