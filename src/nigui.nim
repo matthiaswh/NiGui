@@ -2453,7 +2453,7 @@ method naturalWidth(checkBox: CheckBox): int = checkBox.getTextWidth(checkBox.te
 
 method naturalHeight(checkBox: CheckBox): int = checkBox.getTextLineHeight() * checkBox.text.countLines + 12
 
-method onToggle(checkBox: CheckBox | ToggleButton): ToggleProc = checkBox.fOnToggle
+method onToggle(checkBox: CheckBox): ToggleProc = checkBox.fOnToggle
 method `onToggle=`(checkBox: CheckBox, callback: ToggleProc) = checkBox.fOnToggle = callback
 
 method handleToggleEvent(checkBox: CheckBox, event: ToggleEvent) =
