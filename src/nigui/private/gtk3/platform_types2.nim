@@ -15,6 +15,8 @@ type
 
   NativeCheckBox* = ref object of CheckBox
 
+  NativeComboBox* = ref object of ComboBox
+
   NativeLabel* = ref object of Label
 
   NativeTextBox* = ref object of TextBox

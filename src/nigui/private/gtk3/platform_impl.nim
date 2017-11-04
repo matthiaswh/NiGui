@@ -1157,6 +1157,58 @@ method `checked=`(checkBox: NativeCheckBox, checked: bool) =
 
 
 # ----------------------------------------------------------------------------------------
+#                                        ComboBox
+# ----------------------------------------------------------------------------------------
+
+proc pComboBoxChangedSignal(widget: pointer, data: pointer): bool {.cdecl.} =
+  let comboBox = cast[NativeComboBox](data)
+  comboBox.fSelectedIndex = gtk_combo_box_get_active(comboBox.fHandle)
+  comboBox.fSelectedValue = $gtk_combo_box_get_active_id(comboBox.fHandle)
+  comboBox.fSelectedText = $gtk_combo_box_text_get_active_text(comboBox.fHandle)
+  var selectionChangeEvent = new SelectionChangeEvent
+  selectionChangeEvent.control = comboBox
+  try:
+    comboBox.handleSelectionChangeEvent(selectionChangeEvent)
+  except:
+    handleException()
+
+proc pAddComboBoxToggleEvent(comboBox: NativeComboBox) =
+  discard g_signal_connect_data(comboBox.fHandle, "changed", pComboBoxChangedSignal, cast[pointer](comboBox))
+
+proc init(comboBox: NativeComboBox) =
+  comboBox.fHandle = gtk_combo_box_text_new()
+  comboBox.ComboBox.init()
+  comboBox.pAddComboBoxToggleEvent()
+
+method append(comboBox: NativeComboBox, value: string, text: string) =
+  gtk_combo_box_text_append(comboBox.fHandle, value, text)
+
+method prepend(comboBox: NativeComboBox, value: string, text: string) =
+  gtk_combo_box_text_prepend(comboBox.fHandle, value, text)
+
+method insert(comboBox: NativeComboBox, position: int, value: string, text: string) =
+  gtk_combo_box_text_insert(comboBox.fHandle, position.cint, value, text)
+
+method remove(comboBox: NativeComboBox, position: int) =
+  gtk_combo_box_text_remove(comboBox.fHandle, position.cint)
+
+method clear(comboBox: NativeComboBox) =
+  gtk_combo_box_text_remove_all(comboBox.fHandle)
+
+method `enabled=`(comboBox: NativeComboBox, enabled: bool) =
+  comboBox.fEnabled = enabled
+  gtk_widget_set_sensitive(comboBox.fHandle, enabled)
+
+method `selectedIndex=`(comboBox: NativeComboBox, index: int) =
+  comboBox.fSelectedIndex = index
+  gtk_combo_box_set_active(comboBox.fHandle, index.cint)
+
+method `selectedValue=`(comboBox: NativeComboBox, value: string) =
+  comboBox.fSelectedValue = value
+  discard gtk_combo_box_set_active_id(comboBox.fHandle, value)
+
+
+# ----------------------------------------------------------------------------------------
 #                                        Label
 # ----------------------------------------------------------------------------------------
 

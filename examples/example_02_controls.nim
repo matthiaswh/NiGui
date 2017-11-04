@@ -21,6 +21,14 @@ container.add(toggleButton)
 var checkBox = newCheckBox("CheckBox")
 container.add(checkBox)
 
+# Add a ComboBox control:
+var comboBox = newComboBox()
+container.add(comboBox)
+comboBox.append("id1", "Item 1")
+comboBox.prepend("id2" ,"Item 2")
+comboBox.insert(0, "id3", "Item 3")
+comboBox.selectedValue = "id2"
+
 # Add a Label control:
 var label = newLabel("Label")
 container.add(label)

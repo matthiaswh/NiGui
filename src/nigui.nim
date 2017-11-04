@@ -291,6 +291,10 @@ type
     control*: Control
   ToggleProc* = proc(event: ToggleEvent)
 
+  SelectionChangeEvent* = ref object
+    control*: Control
+  SelectionChangeProc* = proc(event: SelectionChangeEvent)
+
   # Other events:
 
   ErrorHandlerProc* = proc()
@@ -334,6 +338,13 @@ type
     fEnabled: bool
     fToggled: bool
     fOnToggle: ToggleProc
+
+  ComboBox* = ref object of ControlImpl
+    fEnabled: bool
+    fSelectedIndex: int
+    fSelectedValue: string
+    fSelectedText: string
+    fOnSelectionChanged: SelectionChangeProc
 
   Label* = ref object of ControlImpl
     fText: string
@@ -906,6 +917,37 @@ method onToggle*(toggleButton: ToggleButton): ToggleProc
 method `onToggle=`*(toggleButton: ToggleButton, callback: ToggleProc)
 
 method handleToggleEvent(toggleButton: ToggleButton, event: ToggleEvent)
+
+
+# ----------------------------------------------------------------------------------------
+#                                        ComboBox
+# ----------------------------------------------------------------------------------------
+
+proc newComboBox*(): ComboBox
+
+proc init*(comboBox: ComboBox)
+proc init*(comboBox: NativeComboBox)
+
+method append*(comboBox: ComboBox, value: string, text: string)
+method prepend*(comboBox: ComboBox, value: string, text: string)
+method insert*(comboBox: ComboBox, position: int, value: string, text: string)
+method remove*(comboBox: ComboBox, position: int)
+method clear*(comboBox: ComboBox)
+
+method enabled*(comboBox: ComboBox): bool
+method `enabled=`*(comboBox: ComboBox, enabled: bool)
+
+method selectedIndex*(comboBox: ComboBox): int
+method `selectedIndex=`*(comboBox: ComboBox, index: int)
+
+method selectedValue*(comboBox: ComboBox): string
+method `selectedValue=`*(comboBox: ComboBox, value: string)
+
+method selectedText*(comboBox: ComboBox): string
+
+method onSelectionChanged*(comboBox: ComboBox): SelectionChangeProc
+method `onSelectionChanged=`*(comboBox: ComboBox, callback: SelectionChangeProc)
+method handleSelectionChangeEvent(comboBox: ComboBox, event: SelectionChangeEvent)
 
 
 # ----------------------------------------------------------------------------------------
@@ -2526,6 +2568,62 @@ method handleToggleEvent(toggleButton: ToggleButton, event: ToggleEvent) =
   if callback != nil:
     callback(event)
 
+
+# ----------------------------------------------------------------------------------------
+#                                        ComboBox
+# ----------------------------------------------------------------------------------------
+
+proc newComboBox(): ComboBox =
+  result = new NativeComboBox
+  result.NativeComboBox.init()
+
+proc init(comboBox: ComboBox) =
+  comboBox.ControlImpl.init()
+  # comboBox.fText = ""
+  comboBox.fOnClick = nil
+  comboBox.fWidthMode = WidthMode_Auto
+  comboBox.fHeightMode = HeightMode_Auto
+  comboBox.minWidth = 15
+  comboBox.minHeight = 15
+  comboBox.enabled = true
+
+method append(comboBox: ComboBox, value: string, text: string) = discard
+  # has to be implemented by NativeComboBox
+
+method prepend(comboBox: ComboBox, value: string, text: string) = discard
+  # has to be implemented by NativeComboBox
+
+method insert(comboBox: ComboBox, position: int, value: string, text: string) = discard
+  # has to be implemented by NativeComboBox
+
+method remove(comboBox: ComboBox, position: int) = discard
+  # has to be implemented by NativeComboBox
+
+method clear(comboBox: ComboBox) = discard
+  # has to be implemented by NativeComboBox
+
+method onSelectionChanged(comboBox: ComboBox): SelectionChangeProc = comboBox.fOnSelectionChanged
+method `onSelectionChanged=`(comboBox: ComboBox, callback: SelectionChangeProc) = comboBox.fOnSelectionChanged = callback
+
+method handleSelectionChangeEvent(comboBox: ComboBox, event: SelectionChangeEvent) =
+  # can be overridden by custom button
+  let callback = comboBox.onSelectionChanged
+  if callback != nil:
+    callback(event)
+
+method enabled(comboBox: ComboBox): bool = comboBox.fEnabled
+method `enabled=`(comboBox: ComboBox, enabled: bool) = discard
+  # has to be implemented by NativeComboBox
+
+method selectedIndex(comboBox: ComboBox): int = comboBox.fSelectedIndex
+method `selectedIndex=`(comboBox: ComboBox, index: int) = discard
+  # has to be implemented by NativeComboBox
+
+method selectedValue(comboBox: ComboBox): string = comboBox.fSelectedValue
+method `selectedValue=`(comboBox: ComboBox, value: string) = discard
+  # has to be implemented by NativeComboBox
+
+method selectedText(comboBox: ComboBox): string = comboBox.fSelectedText
 
 # ----------------------------------------------------------------------------------------
 #                                        Label
