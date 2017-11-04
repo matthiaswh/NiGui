@@ -1265,11 +1265,11 @@ method `enabled=`(toggleButton: NativeToggleButton, enabled: bool) =
   toggleButton.fEnabled = enabled
   discard EnableWindow(toggleButton.fHandle, enabled)
 
-method checked(toggleButton: NativeToggleButton): bool = toggleButton.fToggled
+method toggled(toggleButton: NativeToggleButton): bool = toggleButton.fToggled
 
-method `checked=`(toggleButton: NativeToggleButton, checked: bool) =
-  toggleButton.fToggled = checked
-  discard SendMessageA(toggleButton.fHandle, BM_SETCHECK, cast[pointer](checked), nil)
+method `toggled=`(toggleButton: NativeToggleButton, toggled: bool) =
+  toggleButton.fToggled = toggled
+  discard SendMessageA(toggleButton.fHandle, BM_SETCHECK, cast[pointer](toggled), nil)
 
 
 # ----------------------------------------------------------------------------------------

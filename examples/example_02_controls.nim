@@ -14,7 +14,7 @@ var button = newButton("Button")
 container.add(button)
 
 # Add a ToggleButton control:
-var toggleButton = newToggleButton("Toggle Button")
+var toggleButton = newToggleButton("ToggleButton")
 container.add(toggleButton)
 
 # Add a CheckBox control:

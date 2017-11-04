@@ -1092,7 +1092,6 @@ proc pToggleButtonToggleSignal(widget: pointer, event: var GdkEventButton, data:
   toggleButton.toggled = not toggleButton.toggled
   var toggleEvent = new ToggleEvent
   toggleEvent.control = toggleButton
-  toggleEvent.toggled = toggleButton.toggled
   try:
     toggleButton.handleToggleEvent(toggleEvent)
   except:
@@ -1127,12 +1126,11 @@ method `toggled=`(toggleButton: NativeToggleButton, toggled: bool) =
 
 proc pCheckBoxToggleSignal(widget: pointer, event: var GdkEventButton, data: pointer): bool {.cdecl.} =
   let checkBox = cast[NativeCheckBox](data)
-  var checkBoxToggleEvent = new CheckBoxToggleEvent
-  checkBoxToggleEvent.control = checkBox
-  checkBoxToggleEvent.checked = not checkBox.checked
+  var toggleEvent = new ToggleEvent
+  toggleEvent.control = checkBox
   try:
     checkBox.checked = not checkBox.checked
-    checkBox.handleToggleEvent(checkBoxToggleEvent)
+    checkBox.handleToggleEvent(toggleEvent)
   except:
     handleException()
 

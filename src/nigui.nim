@@ -289,13 +289,7 @@ type
 
   ToggleEvent* = ref object
     control*: Control
-    toggled*: bool
   ToggleProc* = proc(event: ToggleEvent)
-
-  CheckBoxToggleEvent* = ref object
-    control*: Control
-    checked*: bool
-  CheckBoxToggleProc* = proc(event: CheckBoxToggleEvent)
 
   # Other events:
 
@@ -333,7 +327,7 @@ type
     fText: string
     fEnabled: bool
     fChecked: bool
-    fOnToggle: CheckBoxToggleProc
+    fOnToggle: ToggleProc
 
   ToggleButton* = ref object of ControlImpl
     fText: string
@@ -881,8 +875,8 @@ proc init*(checkBox: NativeCheckBox)
 method text*(checkBox: CheckBox): string
 method `text=`*(checkBox: CheckBox, text: string)
 
-method onToggle*(checkBox: CheckBox): CheckBoxToggleProc
-method `onToggle=`*(checkBox: CheckBox, callback: CheckBoxToggleProc)
+method onToggle*(checkBox: CheckBox): ToggleProc
+method `onToggle=`*(checkBox: CheckBox, callback: ToggleProc)
 
 method enabled*(checkBox: CheckBox): bool
 method `enabled=`*(checkBox: CheckBox, enabled: bool)
@@ -2459,10 +2453,10 @@ method naturalWidth(checkBox: CheckBox): int = checkBox.getTextWidth(checkBox.te
 
 method naturalHeight(checkBox: CheckBox): int = checkBox.getTextLineHeight() * checkBox.text.countLines + 12
 
-method onToggle(checkBox: CheckBox): CheckBoxToggleProc = checkBox.fOnToggle
-method `onToggle=`(checkBox: CheckBox, callback: CheckBoxToggleProc) = checkBox.fOnToggle = callback
+method onToggle(checkBox: CheckBox | ToggleButton): ToggleProc = checkBox.fOnToggle
+method `onToggle=`(checkBox: CheckBox, callback: ToggleProc) = checkBox.fOnToggle = callback
 
-method handleToggleEvent(checkBox: CheckBox, event: CheckBoxToggleEvent) =
+method handleToggleEvent(checkBox: CheckBox, event: ToggleEvent) =
   # can be overridden by custom button
   let callback = checkBox.onToggle
   if callback != nil:
