@@ -50,3 +50,11 @@ for i in 3..30:
 window.show()
 
 app.run()
+
+discard """ TODOS
+  - GTK ComboBox
+    -> Add `selectedText=` functionality
+  - WIN ComboBox
+    -> Calculate visible height
+       This should be done after adding an combobox item
+"""
