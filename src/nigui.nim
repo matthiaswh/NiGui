@@ -2579,7 +2579,6 @@ proc newComboBox(): ComboBox =
 
 proc init(comboBox: ComboBox) =
   comboBox.ControlImpl.init()
-  # comboBox.fText = ""
   comboBox.fOnClick = nil
   comboBox.fWidthMode = WidthMode_Auto
   comboBox.fHeightMode = HeightMode_Auto
@@ -2624,6 +2623,7 @@ method `selectedValue=`(comboBox: ComboBox, value: string) = discard
   # has to be implemented by NativeComboBox
 
 method selectedText(comboBox: ComboBox): string = comboBox.fSelectedText
+
 
 # ----------------------------------------------------------------------------------------
 #                                        Label
