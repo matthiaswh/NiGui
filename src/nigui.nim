@@ -944,6 +944,7 @@ method selectedValue*(comboBox: ComboBox): string
 method `selectedValue=`*(comboBox: ComboBox, value: string)
 
 method selectedText*(comboBox: ComboBox): string
+method `selectedText=`*(comboBox: ComboBox, text: string)
 
 method onSelectionChanged*(comboBox: ComboBox): SelectionChangeProc
 method `onSelectionChanged=`*(comboBox: ComboBox, callback: SelectionChangeProc)
@@ -2623,6 +2624,8 @@ method `selectedValue=`(comboBox: ComboBox, value: string) = discard
   # has to be implemented by NativeComboBox
 
 method selectedText(comboBox: ComboBox): string = comboBox.fSelectedText
+method `selectedText=`(comboBox: ComboBox, text: string) = discard
+  # has to be implemented by NativeComboBox
 
 
 # ----------------------------------------------------------------------------------------

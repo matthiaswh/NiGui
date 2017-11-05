@@ -1366,7 +1366,7 @@ proc init(comboBox: NativeComboBox) =
   # CBS_HASSTRINGS | WS_OVERLAPPED | WS_VISIBLE
   comboBox.fHandle = pCreateWindowExWithUserdata(
     "COMBOBOX",
-    WS_VISIBLE or WS_CHILD or CBS_DROPDOWNLIST or WS_VSCROLL,  # Styles WS_VSCROLL or BS_DEFSPLITBUTTON WS_DISABLED or
+    WS_VISIBLE or WS_CHILD or CBS_DROPDOWNLIST or WS_VSCROLL, #or CBS_AUTOHSCROLL,  # Styles WS_VSCROLL or BS_DEFSPLITBUTTON WS_DISABLED or
     0,
     pDefaultParentWindow,
     cast[pointer](comboBox),
@@ -1403,12 +1403,16 @@ proc init(comboBox: NativeComboBox) =
 
 method append(comboBox: NativeComboBox, value: string, text: string) =
   discard SendMessageA(comboBox.fHandle, CB_ADDSTRING, nil, cast[pointer](text.cstring))
+  let position: int = cast[int](SendMessageA(comboBox.fHandle, CB_GETCOUNT, nil, nil)) - 1
+  discard SendMessageA(comboBox.fHandle, CB_SETITEMDATA, cast[pointer](position), cast[pointer](value.cstring))
 
 method prepend(comboBox: NativeComboBox, value: string, text: string) =
   discard SendMessageA(comboBox.fHandle, CB_INSERTSTRING, cast[pointer](0), cast[pointer](text.cstring))
+  discard SendMessageA(comboBox.fHandle, CB_SETITEMDATA, cast[pointer](0), cast[pointer](value.cstring))
 
 method insert(comboBox: NativeComboBox, position: int, value: string, text: string) =
   discard SendMessageA(comboBox.fHandle, CB_INSERTSTRING, cast[pointer](position), cast[pointer](text.cstring))
+  discard SendMessageA(comboBox.fHandle, CB_SETITEMDATA, cast[pointer](position), cast[pointer](value.cstring))
 
 method remove(comboBox: NativeComboBox, position: int) =
   discard # gtk_combo_box_text_remove(comboBox.fHandle, position.cint)
@@ -1422,14 +1426,21 @@ method `enabled=`(checkBox: NativeComboBox, enabled: bool) =
   discard EnableWindow(checkBox.fHandle, enabled)
 
 method `selectedIndex=`(comboBox: NativeComboBox, index: int) =
-  discard
-  # comboBox.fSelectedIndex = index
-  # gtk_combo_box_set_active(comboBox.fHandle, index.cint)
+  discard SendMessageA(comboBox.fHandle, CB_SETCURSEL, cast[pointer](index), nil)
 
 method `selectedValue=`(comboBox: NativeComboBox, value: string) =
-  discard
-  # comboBox.fSelectedValue = value
-  # discard gtk_combo_box_set_active_id(comboBox.fHandle, value)
+  # TODO: Replace this by an highlevel item list
+  let listCount: int = cast[int](SendMessageA(comboBox.fHandle, CB_GETCOUNT, nil, nil))
+  var tempValue: string
+  for idx in 0..listCount - 1:
+    tempValue = $cast[cstring](SendMessageA(comboBox.fHandle, CB_GETITEMDATA, cast[pointer](idx), nil))
+    if value == tempValue:
+      discard SendMessageA(comboBox.fHandle, CB_SETCURSEL, cast[pointer](idx), nil)
+      break
+
+method `selectedText=`(comboBox: NativeComboBox, text: string) =
+  let index: int = cast[int](SendMessageA(comboBox.fHandle, CB_FINDSTRINGEXACT, cast[pointer](-1), text.cstring))
+  discard SendMessageA(comboBox.fHandle, CB_SETCURSEL, cast[pointer](index), nil)
 
 
 # ----------------------------------------------------------------------------------------

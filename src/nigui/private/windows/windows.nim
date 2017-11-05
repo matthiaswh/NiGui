@@ -185,6 +185,14 @@ const
   BS_DEFSPLITBUTTON* = 0x0000000D
   CB_INSERTSTRING* = 330
   CBS_NOINTEGRALHEIGHT* = 0x400
+  CBS_AUTOHSCROLL* = 64
+  CB_SETITEMDATA* = 337
+  CB_GETCOUNT* = 326
+  CB_GETITEMDATA* = 336
+  CB_SELECTSTRING* = 333
+  CB_FINDSTRINGEXACT* = 344
+  CB_FINDSTRING* = 332
+  CB_SETCURSEL* = 334
 
 
 # ----------------------------------------------------------------------------------------

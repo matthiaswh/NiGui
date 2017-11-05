@@ -27,7 +27,9 @@ container.add(comboBox)
 comboBox.append("id1", "Item 1")
 comboBox.prepend("id2" ,"Item 2")
 comboBox.insert(0, "id3", "Item 3")
+# comboBox.selectedIndex = 1
 comboBox.selectedValue = "id2"
+# comboBox.selectedText = "Item 2"
 
 # Add a Label control:
 var label = newLabel("Label")
