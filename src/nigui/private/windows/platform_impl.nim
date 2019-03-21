@@ -1275,6 +1275,10 @@ method remove(container: ContainerImpl, control: ControlImpl) =
   procCall container.Container.remove(control)
   pSetParent(control.fHandle, pDefaultParentWindow)
 
+method insert(container: ContainerImpl, control: ControlImpl, idx: int) =
+  procCall container.Container.insert(control, idx)
+  pSetParent(control.fHandle, container.fInnerHandle)
+
 method setInnerSize(container: ContainerImpl, width, height: int) =
   procCall container.Container.setInnerSize(width, height)
   pSetWindowPos(container.fInnerHandle, -1, -1, width, height, SWP_NOMOVE)

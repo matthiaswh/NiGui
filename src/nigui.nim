@@ -760,6 +760,7 @@ method `frame=`*(container: Container, frame: Frame)
 
 method add*(container: Container, control: Control)
 method remove*(container: Container, control: Control)
+method insert*(container: Container, control: Control, idx: int)
 
 method getPadding*(container: Container): Spacing
 
@@ -1799,6 +1800,14 @@ method remove(container: Container, control: Control) =
     # for i in startIndex..container.childControls.high:
       # container.childControl[i].fIndex = i
     # control.parentControl = nil
+
+method insert(container: Container, control: Control, idx: int) =
+  if control.fParentControl != nil:
+    raiseError("Control can be added only to one container.")
+  container.fChildControls.insert(control, idx)
+  control.fParentControl = container
+  control.fIndex = 0
+  container.triggerRelayout()
 
 method setControlPosition(container: Container, control: Control, x, y: int) =
   control.setPosition(x, y)

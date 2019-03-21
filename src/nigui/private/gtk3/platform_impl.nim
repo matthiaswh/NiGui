@@ -1107,6 +1107,10 @@ method add(container: ContainerImpl, control: ControlImpl) =
   gtk_container_add(container.fInnerHandle, control.fHandle)
   procCall container.Container.add(control)
 
+method insert(container: ContainerImpl, control: ControlImpl, idx: int) =
+  gtk_container_add(container.fInnerHandle, control.fHandle)
+  procCall container.Container.insert(control, idx)
+
 method paddingLeft(container: ContainerImpl): int = 5 # TODO
 method paddingRight(container: ContainerImpl): int = 5 # TODO
 method paddingTop(container: ContainerImpl): int = 15 # TODO
