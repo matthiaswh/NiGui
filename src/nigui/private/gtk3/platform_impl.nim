@@ -95,6 +95,7 @@ proc pKeyvalToKey(keyval: cint): Key =
   of 65106: Key_Circumflex
   of 65289: Key_Tab
   of 65293: Key_Return
+  of 65421: Key_Return # num pad enter
   of 65307: Key_Escape
   of 65379: Key_Insert
   of 65535: Key_Delete
