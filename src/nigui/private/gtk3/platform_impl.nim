@@ -896,7 +896,7 @@ method `visible=`(control: ControlImpl, visible: bool) =
   # result = true # Stop propagation
 
 method pUpdateScrollBar(control: ControlImpl) =
-  if control.fScrollableWidth == -1 and control.fScrollableHeight == -1:
+  if control.fScrollableWidth == -1 and control.fScrollableHeight == -1 or not control.fScrollable:
     return
   echo "control.pUpdateScrollBar"
   if control.fHScrollbar == nil:
@@ -1124,9 +1124,18 @@ method setSize(container: ContainerImpl, width, height: int) =
   procCall container.Container.setSize(width, height)
   container.pUpdateScrollWnd()
 
+method `scrollable=`(container: ContainerImpl, scrollable: bool) =
+  procCall container.Container.`scrollable=`(scrollable)
+  var xPolicy: cint = GTK_POLICY_NEVER
+  var yPolicy: cint = GTK_POLICY_NEVER
+  if scrollable:
+    xPolicy = GTK_POLICY_AUTOMATIC
+    yPolicy = GTK_POLICY_AUTOMATIC
+  gtk_scrolled_window_set_policy(container.fScrollWndHandle, xPolicy, yPolicy)
+
 method pUpdateScrollBar(container: ContainerImpl) =
   # Overwrite base method
-  if container.fScrollableWidth == -1 and container.fScrollableHeight == -1:
+  if container.fScrollableWidth == -1 and container.fScrollableHeight == -1 or not container.scrollable:
     return
 
   if fScrollbarSize == -1:

@@ -179,6 +179,7 @@ type
     fHeightMode: HeightMode
     fMinWidth, fMinHeight: int
     fMaxWidth, fMaxHeight: int
+    fScrollable: bool
     fXScrollEnabled, fYScrollEnabled: bool
     fXScrollPos, fYScrollPos: int
     fScrollableWidth, fScrollableHeight: int
@@ -675,6 +676,9 @@ method `heightMode=`*(control: Control, mode: HeightMode)
 method visibleWidth*(control: Control): int
 
 method visibleHeight*(control: Control): int
+
+method scrollable*(control: Control): bool
+method `scrollable=`*(control: Control, scrollable: bool)
 
 method xScrollPos*(control: Control): int
 method `xScrollPos=`*(control: Control, xScrollPos: int)
@@ -1368,6 +1372,7 @@ proc init(control: Control) =
   control.fHeightMode = HeightMode_Static
   control.fWidth = 50
   control.fheight = 50
+  control.scrollable = true
   control.fScrollableWidth = -1
   control.fScrollableHeight = -1
   control.resetFontFamily()
@@ -1604,6 +1609,11 @@ method xScrollPos(control: Control): int = control.fXScrollPos
 
 method `xScrollPos=`(control: Control, xScrollPos: int) =
   control.fXScrollPos = xScrollPos
+
+method scrollable*(control: Control): bool = control.fScrollable
+
+method `scrollable=`*(control: Control, scrollable: bool) =
+    control.fScrollable = scrollable
 
 method yScrollPos(control: Control): int = control.fYScrollPos
 
