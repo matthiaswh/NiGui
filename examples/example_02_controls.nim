@@ -1,6 +1,6 @@
 # This example shows several controls of NiGui.
 
-import nigui
+import ../src/nigui
 
 app.init()
 
@@ -12,6 +12,24 @@ window.add(container)
 # Add a Button control:
 var button = newButton("Button")
 container.add(button)
+
+# Add a ToggleButton control:
+var toggleButton = newToggleButton("ToggleButton")
+container.add(toggleButton)
+
+# Add a CheckBox control:
+var checkBox = newCheckBox("CheckBox")
+container.add(checkBox)
+
+# Add a ComboBox control:
+var comboBox = newComboBox()
+container.add(comboBox)
+comboBox.append("id1", "Item 1")
+comboBox.prepend("id2" ,"Item 2")
+comboBox.insert(0, "id3", "Item 3")
+# comboBox.selectedIndex = 1
+comboBox.selectedValue = "id2"
+# comboBox.selectedText = "Item 2"
 
 # Add a Label control:
 var label = newLabel("Label")
@@ -36,3 +54,11 @@ button.onClick = proc(event: ClickEvent) =
 window.show()
 
 app.run()
+
+discard """ TODOS
+  - GTK ComboBox
+    -> Add `selectedText=` functionality
+  - WIN ComboBox
+    -> Calculate visible height
+       This should be done after adding an combobox item
+"""

@@ -159,11 +159,18 @@ type
     fX, fY: int
     fControl: Control
     fIconPath: string
+    fShowOnce: bool
+    fHideOnce: bool
     fOnDispose: WindowDisposeProc
     fOnCloseClick: CloseClickProc
     fOnResize: ResizeProc
     fOnDropFiles: DropFilesProc
     fOnKeyDown: KeyboardProc
+    fOnShow: WindowVisibleProc
+    fOnHide: WindowVisibleProc
+    fOnShowOnce: WindowVisibleProc
+    fOnHideOnce: WindowVisibleProc
+    fOnVisibleChanged: WindowVisibleProc
 
   # Control base type:
 
@@ -193,6 +200,8 @@ type
     fCanvas: Canvas
     fOnDispose: ControlDisposeProc
     fOnDraw: DrawProc
+    fOnEnter: EnterProc
+    fOnLeave: LeaveProc
     fOnMouseButtonDown: MouseButtonProc
     fOnMouseButtonUp: MouseButtonProc
     fOnClick: ClickProc
@@ -244,6 +253,8 @@ type
     handled*: bool
   KeyboardProc* = proc(event: KeyboardEvent)
 
+  WindowVisibleProc* = proc()
+
   # Control events:
 
   ControlDisposeEvent* = ref object
@@ -253,6 +264,14 @@ type
   DrawEvent* = ref object
     control*: Control
   DrawProc* = proc(event: DrawEvent)
+
+  EnterEvent* = ref object
+    control*: Control
+  EnterProc* = proc(event: EnterEvent)
+
+  LeaveEvent* = ref object
+    control*: Control
+  LeaveProc* = proc(event: LeaveEvent)
 
   MouseEvent* = ref object
     control*: Control
@@ -268,6 +287,14 @@ type
   TextChangeEvent* = ref object
     control*: Control
   TextChangeProc* = proc(event: TextChangeEvent)
+
+  ToggleEvent* = ref object
+    control*: Control
+  ToggleProc* = proc(event: ToggleEvent)
+
+  SelectionChangeEvent* = ref object
+    control*: Control
+  SelectionChangeProc* = proc(event: SelectionChangeEvent)
 
   # Other events:
 
@@ -301,13 +328,32 @@ type
     fText: string
     fEnabled: bool
 
+  CheckBox* = ref object of ControlImpl
+    fText: string
+    fEnabled: bool
+    fChecked: bool
+    fOnToggle: ToggleProc
+
+  ToggleButton* = ref object of ControlImpl
+    fText: string
+    fEnabled: bool
+    fToggled: bool
+    fOnToggle: ToggleProc
+
+  ComboBox* = ref object of ControlImpl
+    fEnabled: bool
+    fSelectedIndex: int
+    fSelectedValue: string
+    fSelectedText: string
+    fOnSelectionChanged: SelectionChangeProc
+
   Label* = ref object of ControlImpl
     fText: string
 
   TextBox* = ref object of ControlImpl
     fEditable: bool
 
-# Platform-specific extension:
+# Platform-specific extension of basic controls:
 when useWindows(): include "nigui/private/windows/platform_types2"
 when useGtk():     include "nigui/private/gtk3/platform_types2"
 
@@ -575,6 +621,8 @@ method handleResizeEvent*(window: Window, event: ResizeEvent)
 
 method handleKeyDownEvent*(window: Window, event: KeyboardEvent)
 
+method handleVisibleEvent*(window: Window)
+
 method handleDropFilesEvent*(window: Window, event: DropFilesEvent)
 
 method onDispose*(window: Window): WindowDisposeProc
@@ -591,6 +639,25 @@ method `onDropFiles=`*(window: Window, callback: DropFilesProc)
 
 method onKeyDown*(window: Window): KeyboardProc
 method `onKeyDown=`*(window: Window, callback: KeyboardProc)
+
+method showOnce*(window: Window): bool
+
+method hideOnce*(window: Window): bool
+
+method onShow*(window: Window): WindowVisibleProc
+method `onShow=`*(window: Window, callback: WindowVisibleProc)
+
+method onHide*(window: Window): WindowVisibleProc
+method `onHide=`*(window: Window, callback: WindowVisibleProc)
+
+method onShowOnce*(window: Window): WindowVisibleProc
+method `onShowOnce=`*(window: Window, callback: WindowVisibleProc)
+
+method onHideOnce*(window: Window): WindowVisibleProc
+method `onHideOnce=`*(window: Window, callback: WindowVisibleProc)
+
+method onVisibleChanged*(window: Window): WindowVisibleProc
+method `onVisibleChanged=`*(window: Window, callback: WindowVisibleProc)
 
 
 # ----------------------------------------------------------------------------------------
@@ -722,6 +789,10 @@ method handleClickEvent*(control: Control, event: ClickEvent)
 
 method handleKeyDownEvent*(control: Control, event: KeyboardEvent)
 
+method handleEnterEvent*(control: Control, event: EnterEvent)
+
+method handleLeaveEvent*(control: Control, event: LeaveEvent)
+
 method handleTextChangeEvent*(control: Control, event: TextChangeEvent)
 
 method onDispose*(control: Control): ControlDisposeProc
@@ -729,6 +800,12 @@ method `onDispose=`*(control: Control, callback: ControlDisposeProc)
 
 method onDraw*(control: Control): DrawProc
 method `onDraw=`*(control: Control, callback: DrawProc)
+
+method onEnter*(control: Control): EnterProc
+method `onEnter=`*(control: Control, callback: EnterProc)
+
+method onLeave*(control: Control): LeaveProc
+method `onLeave=`*(control: Control, callback: LeaveProc)
 
 method onMouseButtonDown*(control: Control): MouseButtonProc
 method `onMouseButtonDown=`*(control: Control, callback: MouseButtonProc)
@@ -818,6 +895,82 @@ method `text=`*(button: Button, text: string)
 
 method enabled*(button: Button): bool
 method `enabled=`*(button: Button, enabled: bool)
+
+# ----------------------------------------------------------------------------------------
+#                                      CheckBox
+# ----------------------------------------------------------------------------------------
+
+proc newCheckBox*(text = ""): CheckBox
+
+proc init*(checkBox: CheckBox)
+proc init*(checkBox: NativeCheckBox)
+
+method text*(checkBox: CheckBox): string
+method `text=`*(checkBox: CheckBox, text: string)
+
+method onToggle*(checkBox: CheckBox): ToggleProc
+method `onToggle=`*(checkBox: CheckBox, callback: ToggleProc)
+
+method enabled*(checkBox: CheckBox): bool
+method `enabled=`*(checkBox: CheckBox, enabled: bool)
+
+method checked*(checkBox: CheckBox): bool
+method `checked=`*(checkBox: CheckBox, checked: bool)
+
+# ----------------------------------------------------------------------------------------
+#                                        ToggleButton
+# ----------------------------------------------------------------------------------------
+
+proc newToggleButton*(text = ""): ToggleButton
+
+proc init*(toggleButton: ToggleButton)
+proc init*(toggleButton: NativeToggleButton)
+
+method text*(toggleButton: ToggleButton): string
+method `text=`*(toggleButton: ToggleButton, text: string)
+
+method enabled*(toggleButton: ToggleButton): bool
+method `enabled=`*(toggleButton: ToggleButton, enabled: bool)
+
+method toggled*(toggleButton: ToggleButton): bool
+method `toggled=`*(toggleButton: ToggleButton, toggled: bool)
+
+method onToggle*(toggleButton: ToggleButton): ToggleProc
+method `onToggle=`*(toggleButton: ToggleButton, callback: ToggleProc)
+
+method handleToggleEvent(toggleButton: ToggleButton, event: ToggleEvent)
+
+
+# ----------------------------------------------------------------------------------------
+#                                        ComboBox
+# ----------------------------------------------------------------------------------------
+
+proc newComboBox*(): ComboBox
+
+proc init*(comboBox: ComboBox)
+proc init*(comboBox: NativeComboBox)
+
+method append*(comboBox: ComboBox, value: string, text: string)
+method prepend*(comboBox: ComboBox, value: string, text: string)
+method insert*(comboBox: ComboBox, position: int, value: string, text: string)
+method remove*(comboBox: ComboBox, position: int)
+method clear*(comboBox: ComboBox)
+
+method enabled*(comboBox: ComboBox): bool
+method `enabled=`*(comboBox: ComboBox, enabled: bool)
+
+method selectedIndex*(comboBox: ComboBox): int
+method `selectedIndex=`*(comboBox: ComboBox, index: int)
+
+method selectedValue*(comboBox: ComboBox): string
+method `selectedValue=`*(comboBox: ComboBox, value: string)
+
+method selectedText*(comboBox: ComboBox): string
+method `selectedText=`*(comboBox: ComboBox, text: string)
+
+method onSelectionChanged*(comboBox: ComboBox): SelectionChangeProc
+method `onSelectionChanged=`*(comboBox: ComboBox, callback: SelectionChangeProc)
+method handleSelectionChangeEvent(comboBox: ComboBox, event: SelectionChangeEvent)
 
 
 # ----------------------------------------------------------------------------------------
@@ -1149,7 +1302,7 @@ method fill(canvas: Canvas) = canvas.drawRectArea(0, 0, canvas.width, canvas.hei
 
 
 # ----------------------------------------------------------------------------------------
-#                                        Image
+#                                        ImageonKeyDown
 # ----------------------------------------------------------------------------------------
 
 proc newImage(): Image =
@@ -1337,6 +1490,40 @@ method handleKeyDownEvent(window: Window, event: KeyboardEvent) =
   if callback != nil:
     callback(event)
 
+method handleVisibleEvent(window: Window) =
+  # can be overriden by custom window
+  var callback: WindowVisibleProc
+
+  if window.visible == true:
+    if window.showOnce == false:
+      callback = window.onShowOnce
+      if callback != nil:
+        callback()
+        window.fShowOnce = true
+
+    callback = window.onShow
+    if callback != nil:
+      callback()
+  else:
+    if window.hideOnce == false:
+      callback = window.onHideOnce
+      if callback != nil:
+        callback()
+        window.fHideOnce = true
+
+    callback = window.onHide
+    if callback != nil:
+      callback()
+
+
+  callback = window.onVisibleChanged
+  if callback != nil:
+    callback()
+
+method showOnce(window: Window): bool = window.fShowOnce
+
+method hideOnce(window: Window): bool = window.fHideOnce
+
 method onDispose(window: Window): WindowDisposeProc = window.fOnDispose
 method `onDispose=`(window: Window, callback: WindowDisposeProc) = window.fOnDispose = callback
 
@@ -1351,6 +1538,21 @@ method `onDropFiles=`(window: Window, callback: DropFilesProc) = window.fOnDropF
 
 method onKeyDown(window: Window): KeyboardProc = window.fOnKeyDown
 method `onKeyDown=`(window: Window, callback: KeyboardProc) = window.fOnKeyDown = callback
+
+method onShow(window: Window): WindowVisibleProc = window.fOnShow
+method `onShow=`(window: Window, callback: WindowVisibleProc) = window.fOnShow = callback
+
+method onHide(window: Window): WindowVisibleProc = window.fOnHide
+method `onHide=`(window: Window, callback: WindowVisibleProc) = window.fOnHide = callback
+
+method onShowOnce(window: Window): WindowVisibleProc = window.fOnShowOnce
+method `onShowOnce=`(window: Window, callback: WindowVisibleProc) = window.fOnShowOnce = callback
+
+method onHideOnce(window: Window): WindowVisibleProc = window.fOnHideOnce
+method `onHideOnce=`(window: Window, callback: WindowVisibleProc) = window.fOnHideOnce = callback
+
+method onVisibleChanged(window: Window): WindowVisibleProc = window.fOnVisibleChanged
+method `onVisibleChanged=`(window: Window, callback: WindowVisibleProc) = window.fOnVisibleChanged = callback
 
 
 
@@ -1695,6 +1897,18 @@ method handleDrawEvent(control: Control, event: DrawEvent) =
   if callback != nil:
     callback(event)
 
+method handleEnterEvent(control: Control, event: EnterEvent) =
+  # can be implemented by custom control
+  let callback = control.onEnter
+  if callback != nil:
+    callback(event)
+
+method handleLeaveEvent(control: Control, event: LeaveEvent) =
+  # can be implemented by custom control
+  let callback = control.onLeave
+  if callback != nil:
+    callback(event)
+
 method handleMouseButtonDownEvent(control: Control, event: MouseEvent) =
   # can be implemented by custom control
   let callback = control.onMouseButtonDown
@@ -1730,6 +1944,12 @@ method `onDispose=`(control: Control, callback: ControlDisposeProc) = control.fO
 
 method onDraw(control: Control): DrawProc = control.fOnDraw
 method `onDraw=`(control: Control, callback: DrawProc) = control.fOnDraw = callback
+
+method onEnter(control: Control): EnterProc = control.fOnEnter
+method `onEnter=`(control: Control, callback: EnterProc) = control.fOnEnter = callback
+
+method onLeave(control: Control): LeaveProc = control.fOnLeave
+method `onLeave=`(control: Control, callback: LeaveProc) = control.fOnLeave = callback
 
 method onMouseButtonDown(control: Control): MouseButtonProc = control.fOnMouseButtonDown
 method `onMouseButtonDown=`(control: Control, callback: MouseButtonProc) = control.fOnMouseButtonDown = callback
@@ -2295,6 +2515,171 @@ method handleKeyDownEvent*(button: Button, event: KeyboardEvent) =
 
 
 method `onDraw=`(container: NativeButton, callback: DrawProc) = raiseError("NativeButton does not allow onDraw.")
+
+
+# ----------------------------------------------------------------------------------------
+#                                      CheckBox
+# ----------------------------------------------------------------------------------------
+
+proc newCheckBox(text = ""): CheckBox =
+  result = new NativeCheckBox
+  result.NativeCheckBox.init()
+  result.text = text
+
+proc init(checkBox: CheckBox) =
+  checkBox.ControlImpl.init()
+  checkBox.fText = ""
+  checkBox.fOnClick = nil
+  checkBox.fOnToggle = nil
+  checkBox.fWidthMode = WidthMode_Auto
+  checkBox.fHeightMode = HeightMode_Auto
+  checkBox.minWidth = 15
+  checkBox.minHeight = 15
+  checkBox.enabled = true
+  checkBox.checked = false
+
+method text(checkBox: CheckBox): string = checkBox.fText
+
+method `text=`(checkBox: CheckBox, text: string) =
+  checkBox.fText = text
+  checkBox.tag = text
+  checkBox.triggerRelayoutIfModeIsAuto()
+  # should be extended by NativeCheckbox
+
+method naturalWidth(checkBox: CheckBox): int = checkBox.getTextWidth(checkBox.text) + 20
+
+method naturalHeight(checkBox: CheckBox): int = checkBox.getTextLineHeight() * checkBox.text.countLines + 12
+
+method onToggle(checkBox: CheckBox): ToggleProc = checkBox.fOnToggle
+method `onToggle=`(checkBox: CheckBox, callback: ToggleProc) = checkBox.fOnToggle = callback
+
+method handleToggleEvent(checkBox: CheckBox, event: ToggleEvent) =
+  # can be overridden by custom button
+  let callback = checkBox.onToggle
+  if callback != nil:
+    callback(event)
+
+method enabled(checkBox: CheckBox): bool = checkBox.fEnabled
+
+method `enabled=`(checkBox: CheckBox, enabled: bool) = discard
+  # has to be implemented by NativeCheckBox
+
+method checked(checkBox: CheckBox): bool = checkBox.fChecked
+
+method `checked=`(checkBox: CheckBox, checked: bool) = discard
+  # has to be implemented by NativeCheckBbox
+
+method `onDraw=`(container: NativeCheckBox, callback: DrawProc) = raiseError("NativeCheckBox does not allow onDraw.")
+
+
+# ----------------------------------------------------------------------------------------
+#                                        ToggleButton
+# ----------------------------------------------------------------------------------------
+
+proc newToggleButton(text = ""): ToggleButton =
+  result = new NativeToggleButton
+  result.NativeToggleButton.init()
+  result.text = text
+
+proc init(toggleButton: ToggleButton) =
+  toggleButton.ControlImpl.init()
+  toggleButton.fText = ""
+  toggleButton.fOnClick = nil
+  toggleButton.fWidthMode = WidthMode_Auto
+  toggleButton.fHeightMode = HeightMode_Auto
+  toggleButton.minWidth = 15
+  toggleButton.minHeight = 15
+  toggleButton.enabled = true
+
+method text(toggleButton: ToggleButton): string = toggleButton.fText
+
+method `text=`(toggleButton: ToggleButton, text: string) =
+  toggleButton.fText = text
+  toggleButton.tag = text
+  toggleButton.triggerRelayoutIfModeIsAuto()
+
+method naturalWidth(toggleButton: ToggleButton): int = toggleButton.getTextWidth(toggleButton.text) + 20
+
+method naturalHeight(toggleButton: ToggleButton): int = toggleButton.getTextLineHeight() * toggleButton.text.countLines + 12
+
+method enabled(toggleButton: ToggleButton): bool = toggleButton.fEnabled
+
+method `enabled=`(toggleButton: ToggleButton, enabled: bool) = discard
+  # has to be implemented by NativeToggleButton
+
+method toggled(toggleButton: ToggleButton): bool = toggleButton.fToggled
+
+method `toggled=`(toggleButton: ToggleButton, toggled: bool) = discard
+  # has to be implemented by NativeToggleButton
+
+method `onDraw=`(toggleButton: ToggleButton, callback: DrawProc) = raiseError("NativeToggleButton does not allow onDraw.")
+
+method onToggle(toggleButton: ToggleButton): ToggleProc = toggleButton.fOnToggle
+method `onToggle=`(toggleButton: ToggleButton, callback: ToggleProc) = toggleButton.fOnToggle = callback
+
+method handleToggleEvent(toggleButton: ToggleButton, event: ToggleEvent) =
+  # can be overridden by custom button
+  let callback = toggleButton.onToggle
+  if callback != nil:
+    callback(event)
+
+
+# ----------------------------------------------------------------------------------------
+#                                        ComboBox
+# ----------------------------------------------------------------------------------------
+
+proc newComboBox(): ComboBox =
+  result = new NativeComboBox
+  result.NativeComboBox.init()
+
+proc init(comboBox: ComboBox) =
+  comboBox.ControlImpl.init()
+  comboBox.fOnClick = nil
+  comboBox.fWidthMode = WidthMode_Auto
+  comboBox.fHeightMode = HeightMode_Auto
+  comboBox.minWidth = 15
+  comboBox.minHeight = 15
+  comboBox.enabled = true
+
+method append(comboBox: ComboBox, value: string, text: string) = discard
+  # has to be implemented by NativeComboBox
+
+method prepend(comboBox: ComboBox, value: string, text: string) = discard
+  # has to be implemented by NativeComboBox
+
+method insert(comboBox: ComboBox, position: int, value: string, text: string) = discard
+  # has to be implemented by NativeComboBox
+
+method remove(comboBox: ComboBox, position: int) = discard
+  # has to be implemented by NativeComboBox
+
+method clear(comboBox: ComboBox) = discard
+  # has to be implemented by NativeComboBox
+
+method onSelectionChanged(comboBox: ComboBox): SelectionChangeProc = comboBox.fOnSelectionChanged
+method `onSelectionChanged=`(comboBox: ComboBox, callback: SelectionChangeProc) = comboBox.fOnSelectionChanged = callback
+
+method handleSelectionChangeEvent(comboBox: ComboBox, event: SelectionChangeEvent) =
+  # can be overridden by custom button
+  let callback = comboBox.onSelectionChanged
+  if callback != nil:
+    callback(event)
+
+method enabled(comboBox: ComboBox): bool = comboBox.fEnabled
+method `enabled=`(comboBox: ComboBox, enabled: bool) = discard
+  # has to be implemented by NativeComboBox
+
+method selectedIndex(comboBox: ComboBox): int = comboBox.fSelectedIndex
+method `selectedIndex=`(comboBox: ComboBox, index: int) = discard
+  # has to be implemented by NativeComboBox
+
+method selectedValue(comboBox: ComboBox): string = comboBox.fSelectedValue
+method `selectedValue=`(comboBox: ComboBox, value: string) = discard
+  # has to be implemented by NativeComboBox
+
+method selectedText(comboBox: ComboBox): string = comboBox.fSelectedText
+method `selectedText=`(comboBox: ComboBox, text: string) = discard
+  # has to be implemented by NativeComboBox
 
 
 # ----------------------------------------------------------------------------------------

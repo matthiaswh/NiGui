@@ -137,6 +137,12 @@ proc pWindowKeyPressSignal(widget: pointer, event: var GdkEventKey, data: pointe
 
 proc pWindowKeyReleaseSignal(widget: pointer, event: var GdkEventKey): bool {.cdecl.} =
   internalKeyUp(pKeyvalToKey(event.keyval))
+proc pWindowVisibleSignal(widget: pointer, data: pointer): bool {.cdecl.} =
+  let window = cast[WindowImpl](data)
+  try:
+    window.handleVisibleEvent()
+  except:
+    handleException()
 
 proc pControlKeyPressSignal(widget: pointer, event: var GdkEventKey, data: pointer): bool {.cdecl.} =
   let control = cast[ControlImpl](data)
@@ -188,6 +194,25 @@ method focus(control: ControlImpl) =
 
 method focus(control: NativeTextArea) =
   gtk_widget_grab_focus(control.fTextViewHandle)
+
+
+proc pControlEnterSignal(widget: pointer, event: var GdkEventCrossing, data: pointer): bool {.cdecl.} =
+  let control = cast[ControlImpl](data)
+  var evt = new EnterEvent
+  evt.control = control
+  try:
+    control.handleEnterEvent(evt)
+  except:
+    handleException()
+
+proc pControlLeaveSignal(widget: pointer, event: var GdkEventCrossing, data: pointer): bool {.cdecl.} =
+  let control = cast[ControlImpl](data)
+  var evt = new LeaveEvent
+  evt.control = control
+  try:
+    control.handleLeaveEvent(evt)
+  except:
+    handleException()
 
 proc pDefaultControlButtonPressSignal(widget: pointer, event: var GdkEventButton, data: pointer): bool {.cdecl.} =
   let control = cast[ControlImpl](data)
@@ -717,6 +742,8 @@ proc init(window: WindowImpl) =
   discard g_signal_connect_data(window.fHandle, "configure-event", pWindowConfigureSignal, cast[pointer](window))
   discard g_signal_connect_data(window.fHandle, "key-press-event", pWindowKeyPressSignal, cast[pointer](window))
   discard g_signal_connect_data(window.fHandle, "key-release-event", pWindowKeyReleaseSignal, cast[pointer](window))
+  discard g_signal_connect_data(window.fHandle, "show", pWindowVisibleSignal, cast[pointer](window))
+  discard g_signal_connect_data(window.fHandle, "hide", pWindowVisibleSignal, cast[pointer](window))
   discard g_signal_connect_data(window.fHandle, "window-state-event", pWindowStateEventSignal, cast[pointer](window))
   discard g_signal_connect_data(window.fHandle, "focus-out-event", pWindowFocusOutEventSignal, cast[pointer](window))
 
@@ -876,6 +903,11 @@ proc init(control: ControlImpl) =
 
   control.fIMContext = gtk_im_multicontext_new()
   discard g_signal_connect_data(control.fIMContext, "commit", pControlIMContextCommitSignal, cast[pointer](control))
+  gtk_widget_add_events(control.fHandle, GDK_ENTER_NOTIFY_MASK)
+  discard g_signal_connect_data(control.fHandle, "enter-notify-event", pControlEnterSignal, cast[pointer](control))
+
+  gtk_widget_add_events(control.fHandle, GDK_LEAVE_NOTIFY_MASK)
+  discard g_signal_connect_data(control.fHandle, "leave-notify-event", pControlLeaveSignal, cast[pointer](control))
 
   procCall control.Control.init()
 
@@ -1202,6 +1234,131 @@ method naturalWidth(button: NativeButton): int =
 method `enabled=`(button: NativeButton, enabled: bool) =
   button.fEnabled = enabled
   gtk_widget_set_sensitive(button.fHandle, enabled)
+
+
+# ----------------------------------------------------------------------------------------
+#                                        ToggleButton
+# ----------------------------------------------------------------------------------------
+
+proc pToggleButtonToggleSignal(widget: pointer, event: var GdkEventButton, data: pointer): bool {.cdecl.} =
+  let toggleButton = cast[NativeToggleButton](data)
+  toggleButton.toggled = not toggleButton.toggled
+  var toggleEvent = new ToggleEvent
+  toggleEvent.control = toggleButton
+  try:
+    toggleButton.handleToggleEvent(toggleEvent)
+  except:
+    handleException()
+
+proc pAddToggleButtonToggleEvent(toggleButton: ToggleButton) =
+  gtk_widget_add_events(toggleButton.fHandle, GDK_BUTTON_RELEASE_MASK)
+  discard g_signal_connect_data(toggleButton.fHandle, "button-release-event", pToggleButtonToggleSignal, cast[pointer](toggleButton))
+  # discard g_signal_connect_data(toggleButton.fHandle, "toggled", pToggleButtonToggleSignal, cast[pointer](toggleButton))
+
+proc init(toggleButton: NativeToggleButton) =
+  toggleButton.fHandle = gtk_toggle_button_new()
+  toggleButton.ToggleButton.init()
+  toggleButton.pAddToggleButtonToggleEvent()
+
+method `text=`(toggleButton: NativeToggleButton, text: string) =
+  procCall toggleButton.ToggleButton.`text=`(text)
+  gtk_button_set_label(toggleButton.fHandle, text)
+
+method `enabled=`(toggleButton: NativeToggleButton, enabled: bool) =
+  toggleButton.fEnabled = enabled
+  gtk_widget_set_sensitive(toggleButton.fHandle, enabled)
+
+method `toggled=`(toggleButton: NativeToggleButton, toggled: bool) =
+  toggleButton.fToggled = toggled
+  gtk_toggle_button_set_active(toggleButton.fHandle, toggled)
+
+
+# ----------------------------------------------------------------------------------------
+#                                        CheckBox
+# ----------------------------------------------------------------------------------------
+
+proc pCheckBoxToggleSignal(widget: pointer, event: var GdkEventButton, data: pointer): bool {.cdecl.} =
+  let checkBox = cast[NativeCheckBox](data)
+  var toggleEvent = new ToggleEvent
+  toggleEvent.control = checkBox
+  try:
+    checkBox.checked = not checkBox.checked
+    checkBox.handleToggleEvent(toggleEvent)
+  except:
+    handleException()
+
+proc pAddCheckBoxToggleEvent(checkBox: CheckBox) =
+  gtk_widget_add_events(checkBox.fHandle, GDK_BUTTON_RELEASE_MASK)
+  discard g_signal_connect_data(checkBox.fHandle, "button-release-event", pCheckBoxToggleSignal, cast[pointer](checkBox))
+
+proc init(checkBox: NativeCheckBox) =
+  checkBox.fHandle = gtk_check_button_new()
+  checkBox.CheckBox.init()
+  checkBox.pAddCheckBoxToggleEvent()
+
+method `text=`(checkBox: NativeCheckBox, text: string) =
+  procCall checkBox.CheckBox.`text=`(text)
+  gtk_button_set_label(checkBox.fHandle, text)
+
+method `enabled=`(checkBox: NativeCheckBox, enabled: bool) =
+  checkBox.fEnabled = enabled
+  gtk_widget_set_sensitive(checkBox.fHandle, enabled)
+
+method `checked=`(checkBox: NativeCheckBox, checked: bool) =
+  checkBox.fChecked = checked
+  gtk_toggle_button_set_active(checkBox.fHandle, checked)
+
+
+# ----------------------------------------------------------------------------------------
+#                                        ComboBox
+# ----------------------------------------------------------------------------------------
+
+proc pComboBoxChangedSignal(widget: pointer, data: pointer): bool {.cdecl.} =
+  let comboBox = cast[NativeComboBox](data)
+  comboBox.fSelectedIndex = gtk_combo_box_get_active(comboBox.fHandle)
+  comboBox.fSelectedValue = $gtk_combo_box_get_active_id(comboBox.fHandle)
+  comboBox.fSelectedText = $gtk_combo_box_text_get_active_text(comboBox.fHandle)
+  var selectionChangeEvent = new SelectionChangeEvent
+  selectionChangeEvent.control = comboBox
+  try:
+    comboBox.handleSelectionChangeEvent(selectionChangeEvent)
+  except:
+    handleException()
+
+proc pAddComboBoxToggleEvent(comboBox: NativeComboBox) =
+  discard g_signal_connect_data(comboBox.fHandle, "changed", pComboBoxChangedSignal, cast[pointer](comboBox))
+
+proc init(comboBox: NativeComboBox) =
+  comboBox.fHandle = gtk_combo_box_text_new()
+  comboBox.ComboBox.init()
+  comboBox.pAddComboBoxToggleEvent()
+
+method append(comboBox: NativeComboBox, value: string, text: string) =
+  gtk_combo_box_text_append(comboBox.fHandle, value, text)
+
+method prepend(comboBox: NativeComboBox, value: string, text: string) =
+  gtk_combo_box_text_prepend(comboBox.fHandle, value, text)
+
+method insert(comboBox: NativeComboBox, position: int, value: string, text: string) =
+  gtk_combo_box_text_insert(comboBox.fHandle, position.cint, value, text)
+
+method remove(comboBox: NativeComboBox, position: int) =
+  gtk_combo_box_text_remove(comboBox.fHandle, position.cint)
+
+method clear(comboBox: NativeComboBox) =
+  gtk_combo_box_text_remove_all(comboBox.fHandle)
+
+method `enabled=`(comboBox: NativeComboBox, enabled: bool) =
+  comboBox.fEnabled = enabled
+  gtk_widget_set_sensitive(comboBox.fHandle, enabled)
+
+method `selectedIndex=`(comboBox: NativeComboBox, index: int) =
+  comboBox.fSelectedIndex = index
+  gtk_combo_box_set_active(comboBox.fHandle, index.cint)
+
+method `selectedValue=`(comboBox: NativeComboBox, value: string) =
+  comboBox.fSelectedValue = value
+  discard gtk_combo_box_set_active_id(comboBox.fHandle, value)
 
 
 # ----------------------------------------------------------------------------------------

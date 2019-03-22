@@ -38,7 +38,15 @@ const
   BM_SETSTYLE* = 244
   BM_SETIMAGE* = 247
   BS_DEFPUSHBUTTON* = 0x00000001
+  BM_GETCHECK* = 240.int32
+  BM_SETCHECK* = 241.int32
+  BS_AUTOCHECKBOX* = 3
+  BS_CHECKBOX* = 2
+  BS_PUSHLIKE* = 0x00001000
   BS_GROUPBOX* = 0x00000007
+  BST_CHECKED* = 1
+  BST_INDETERMINATE* = 2
+  BST_UNCHECKED*  = 0
   CF_TEXT* = 1
   COLOR_BTNFACE* = 15
   COLOR_WINDOWTEXT* = 8
@@ -115,6 +123,7 @@ const
   WM_CHANGEUISTATE* = 0x0127
   WM_CHAR* = 258
   WM_CLOSE* = 16
+  WM_SHOWWINDOW* = 0x0018
   WM_COMMAND* = 273
   WM_DROPFILES* = 563
   WM_ERASEBKGND* = 20
@@ -151,10 +160,14 @@ const
   WS_EX_CLIENTEDGE* = 0x00000200
   WS_GROUP* = 0x00020000
   WS_HSCROLL* = 0x00100000
+  WS_MAXIMIZEBOX* = 0x00010000
+  WS_MINIMIZEBOX* = 0x00020000
   WS_OVERLAPPEDWINDOW* = 0x00CF0000
+  WS_OVERLAPPED* = 0x00000000
   WS_SYSMENU* = 0x00080000
   WS_TABSTOP* = 0x00010000
   WS_THICKFRAME* = 0x00040000
+  WS_VISIBLE* = 0x10000000
   WS_VSCROLL* = 0x00200000
   WS_EX_CONTROLPARENT* = 0x00010000
   # DT_CALCRECT* = 1024
@@ -191,6 +204,24 @@ const
   ImageLockModeWrite* = 2
   MAPVK_VSC_TO_VK_EX* = 3
 
+  CBS_DROPDOWNLIST* = 3
+  CBS_DROPDOWN* = 2
+  CB_ADDSTRING* = 323
+  CBS_HASSTRINGS* = 512
+  CBS_OWNERDRAWFIXED* = 16
+  CBS_SIMPLE* = 1
+  CBS_OWNERDRAWVARIABLE* = 32
+  BS_DEFSPLITBUTTON* = 0x0000000D
+  CB_INSERTSTRING* = 330
+  CBS_NOINTEGRALHEIGHT* = 0x400
+  CBS_AUTOHSCROLL* = 64
+  CB_SETITEMDATA* = 337
+  CB_GETCOUNT* = 326
+  CB_GETITEMDATA* = 336
+  CB_SELECTSTRING* = 333
+  CB_FINDSTRINGEXACT* = 344
+  CB_FINDSTRING* = 332
+  CB_SETCURSEL* = 334
 
 
 # ----------------------------------------------------------------------------------------
@@ -522,4 +553,3 @@ proc DragFinish*(hDrop: pointer) {.importc: "DragFinish", libShell32.}
 proc CommDlgExtendedError*(): int32 {.importc: "CommDlgExtendedError", libComdlg32.}
 proc GetOpenFileNameW*(lpofn: var OpenFileName): bool {.importc: "GetOpenFileNameW", libComdlg32.}
 proc GetSaveFileNameW*(lpofn: var OpenFileName): bool {.importc: "GetSaveFileNameW", libComdlg32.}
-

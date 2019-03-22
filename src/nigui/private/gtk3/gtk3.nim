@@ -74,6 +74,21 @@ type
     group*: int8
     is_modifier*: int8
 
+  GdkEventCrossing* {.byCopy.} = object
+    event_type: cint
+    window*: pointer
+    send_event: int8
+    subwindow*: pointer
+    time*: cint
+    x*: cdouble
+    y*: cdouble
+    x_root*: cdouble
+    y_root*: cdouble
+    mode*: cint
+    detail*: cint
+    focus*: bool
+    state*: cuint
+
   GdkEventWindowState* {.byCopy.} = object
     event_type*: cint
     window*: pointer
@@ -168,6 +183,8 @@ const
   GDK_BUTTON_PRESS_MASK*   = 256
   GDK_BUTTON_RELEASE_MASK* = 512
   GDK_KEY_PRESS_MASK*      = 1024
+  GDK_ENTER_NOTIFY_MASK*   = 4096
+  GDK_LEAVE_NOTIFY_MASK*   = 8192
   # [..]
 
   # cairo_format_t:
@@ -325,6 +342,31 @@ proc gtk_button_new*(): pointer {.importc: "gtk_button_new", libgtk3.}
 # proc gtk_button_new_with_label*(label: cstring): pointer {.importc: "gtk_button_new_with_label", libgtk3.}
 # proc gtk_button_get_label*(button: pointer): cstring {.importc: "gtk_button_get_label", libgtk3.}
 proc gtk_button_set_label*(button: pointer, label: cstring) {.importc: "gtk_button_set_label", libgtk3.}
+
+proc gtk_toggle_button_new*(): pointer {.importc: "gtk_toggle_button_new", libgtk3.}
+proc gtk_toggle_button_new_with_label*(label: cstring): pointer {.importc: "gtk_toggle_button_new_with_label", libgtk3.}
+proc gtk_toggle_button_get_active*(toggle_button: pointer): bool {.importc: "gtk_toggle_button_get_active", libgtk3.}
+proc gtk_toggle_button_toggled*(toggle_button: pointer): bool {.importc: "gtk_toggle_button_toggled", libgtk3.}
+proc gtk_toggle_button_set_active*(toggle_button: pointer, is_active: bool) {.importc: "gtk_toggle_button_set_active", libgtk3.}
+
+proc gtk_check_button_new*(): pointer {.importc: "gtk_check_button_new", libgtk3.}
+proc gtk_check_button_new_with_label*(label: cstring): pointer {.importc: "gtk_check_button_new_with_label", libgtk3.}
+
+proc gtk_combo_box_text_new*(): pointer {.importc: "gtk_combo_box_text_new", libgtk3.}
+proc gtk_combo_box_text_append*(combo_box: pointer, id: cstring, text: cstring) {.importc: "gtk_combo_box_text_append", libgtk3.}
+proc gtk_combo_box_text_prepend*(combo_box: pointer, id: cstring, text: cstring) {.importc: "gtk_combo_box_text_prepend", libgtk3.}
+proc gtk_combo_box_text_insert*(combo_box: pointer, position: cint, id: cstring, text: cstring) {.importc: "gtk_combo_box_text_insert", libgtk3.}
+# proc gtk_combo_box_text_append_text*(combo_box: pointer, text: cstring) {.importc: "gtk_combo_box_text_append_text", libgtk3.}
+# proc gtk_combo_box_text_prepend_text*(combo_box: pointer, text: cstring) {.importc: "gtk_combo_box_text_prepend_text", libgtk3.}
+# proc gtk_combo_box_text_insert_text*(combo_box: pointer, position: cint, text: cstring) {.importc: "gtk_combo_box_text_insert_text", libgtk3.}
+proc gtk_combo_box_text_remove*(combo_box: pointer, position: cint) {.importc: "gtk_combo_box_text_remove", libgtk3.}
+proc gtk_combo_box_text_remove_all*(combo_box: pointer) {.importc: "gtk_combo_box_text_remove_all", libgtk3.}
+proc gtk_combo_box_get_active_id*(combo_box: pointer): cstring {.importc: "gtk_combo_box_get_active_id", libgtk3.}
+proc gtk_combo_box_text_get_active_text*(combo_box: pointer): cstring {.importc: "gtk_combo_box_text_get_active_text", libgtk3.}
+proc gtk_combo_box_get_active*(combo_box: pointer): cint {.importc: "gtk_combo_box_get_active", libgtk3.}
+proc gtk_combo_box_set_active*(combo_box: pointer, index: cint) {.importc: "gtk_combo_box_set_active", libgtk3.}
+proc gtk_combo_box_set_active_id*(combo_box: pointer, active_id: cstring): bool {.importc: "gtk_combo_box_set_active_id", libgtk3.}
+# proc gtk_combo_box_text_get_active_text*(combo_box: pointer): cstring {.importc: "gtk_combo_box_text_get_active_text", libgtk3.}
 
 proc gtk_entry_new*(): pointer {.importc: "gtk_entry_new", libgtk3.}
 proc gtk_entry_set_text*(entry: pointer, text: cstring) {.importc: "gtk_entry_set_text", libgtk3.}
@@ -486,5 +528,4 @@ proc pango_font_description_set_weight*(desc: pointer, size: cint) {.importc: "p
 # proc pango_font_description_get_size*(desc: pointer): cint {.importc: "pango_font_description_get_size", libgtk3.}
 # proc pango_layout_set_markup*(layout: pointer, markup: cstring, length: cint) {.importc: "pango_layout_set_markup", libgtk3.}
 # proc pango_layout_new*(context: pointer): pointer {.importc: "pango_layout_new", libgtk3.}
-
 

@@ -145,8 +145,8 @@ proc pSetWindowLongPtr(hWnd: pointer, nIndex: int32, dwNewLong: pointer): pointe
   # result = GetStockObject(fnObject)
   # if result == nil: pRaiseLastOSError()
 
-proc pCreateWindowExWithUserdata(lpClassName: cstring, dwStyle, dwExStyle: int32, hWndParent, userdata: pointer = nil): pointer =
-  result = pCreateWindowEx(dwExStyle, lpClassName, nil, dwStyle, 0, 0, 0, 0, hWndParent, nil, nil, nil)
+proc pCreateWindowExWithUserdata(lpClassName: cstring, dwStyle, dwExStyle: int32, hWndParent, userdata: pointer = nil, x, y, width, height: int = 0): pointer =
+  result = pCreateWindowEx(dwExStyle, lpClassName, nil, dwStyle, x, y, width, height, hWndParent, nil, nil, nil)
   if userdata != nil:
     discard pSetWindowLongPtr(result, GWLP_USERDATA, userdata)
   # Set default font:
@@ -344,6 +344,10 @@ proc pWindowWndProc(hWnd: pointer, uMsg: int32, wParam, lParam: pointer): pointe
         window.fMinimized = true
       elif cast[int](wParam) == SC_RESTORE:
         window.fMinimized = false
+        echo "b"
+  of WM_SHOWWINDOW:
+    let window = cast[WindowImpl](pGetWindowLongPtr(hWnd, GWLP_USERDATA))
+    window.handleVisibleEvent()
   else:
     discard
   result = pCommonWndProc(hWnd, uMsg, wParam, lParam)
@@ -1355,6 +1359,229 @@ method `text=`(button: NativeButton, text: string) =
 method `enabled=`(button: NativeButton, enabled: bool) =
   button.fEnabled = enabled
   discard EnableWindow(button.fHandle, enabled)
+
+
+# ----------------------------------------------------------------------------------------
+#                                      ToggleButton
+# ----------------------------------------------------------------------------------------
+
+var pToggleButtonOrigWndProc: pointer
+
+proc pToggleButtonWndProc(hWnd: pointer, uMsg: int32, wParam, lParam: pointer): pointer {.cdecl.} =
+  case uMsg
+  of WM_KEYDOWN, WM_LBUTTONUP:
+    let toggleButton = cast[ToggleButton](pGetWindowLongPtr(hWnd, GWLP_USERDATA))
+    let keyCode = if uMsg == WM_KEYDOWN: cast[int](wParam) else: 32
+    if toggleButton != nil and keyCode == 32:
+      toggleButton.fToggled = not toggleButton.fToggled
+      discard SendMessageA(toggleButton.fHandle, BM_SETCHECK, cast[pointer](toggleButton.fToggled), nil)
+
+      var event = new ToggleEvent
+      event.control = toggleButton
+      toggleButton.handleToggleEvent(event)
+  else:
+    discard
+  result = pCommonControlWndProc(pToggleButtonOrigWndProc, hWnd, uMsg, wParam, lParam)
+
+proc init(toggleButton: NativeToggleButton) =
+  toggleButton.fHandle = pCreateWindowExWithUserdata(
+    "BUTTON",
+    WS_CHILD or BS_CHECKBOX or WS_TABSTOP or BS_PUSHLIKE,
+    0,
+    pDefaultParentWindow,
+    cast[pointer](toggleButton)
+  )
+  # WS_TABSTOP does not work, why?
+  pToggleButtonOrigWndProc = pSetWindowLongPtr(toggleButton.fHandle, GWLP_WNDPROC, pToggleButtonWndProc)
+  toggleButton.ToggleButton.init()
+
+method `text=`(toggleButton: NativeToggleButton, text: string) =
+  procCall toggleButton.ToggleButton.`text=`(text)
+  pSetWindowText(toggleButton.fHandle, text)
+
+method enabled(toggleButton: NativeToggleButton): bool = toggleButton.fEnabled
+
+method `enabled=`(toggleButton: NativeToggleButton, enabled: bool) =
+  toggleButton.fEnabled = enabled
+  discard EnableWindow(toggleButton.fHandle, enabled)
+
+method toggled(toggleButton: NativeToggleButton): bool = toggleButton.fToggled
+
+method `toggled=`(toggleButton: NativeToggleButton, toggled: bool) =
+  toggleButton.fToggled = toggled
+  discard SendMessageA(toggleButton.fHandle, BM_SETCHECK, cast[pointer](toggled), nil)
+
+
+# ----------------------------------------------------------------------------------------
+#                                      CheckBox
+# ----------------------------------------------------------------------------------------
+
+var pCheckBoxOrigWndProc: pointer
+
+proc pCheckBoxWndProc(hWnd: pointer, uMsg: int32, wParam, lParam: pointer): pointer {.cdecl.} =
+  case uMsg
+  of WM_KEYDOWN, WM_LBUTTONUP:
+    let checkBox = cast[CheckBox](pGetWindowLongPtr(hWnd, GWLP_USERDATA))
+    let keyCode = if uMsg == WM_KEYDOWN: cast[int](wParam) else: 32
+    if checkBox != nil and keyCode == 32:
+      checkBox.fChecked = not checkBox.fChecked
+      discard SendMessageA(checkBox.fHandle, BM_SETCHECK, cast[pointer](checkBox.fChecked), nil)
+
+      var event = new ToggleEvent
+      event.control = checkBox
+      checkBox.handleToggleEvent(event)
+  else:
+    discard
+  result = pCommonControlWndProc(pCheckBoxOrigWndProc, hWnd, uMsg, wParam, lParam)
+
+proc init(checkBox: NativeCheckBox) =
+  checkBox.fHandle = pCreateWindowExWithUserdata(
+    "BUTTON",
+    WS_CHILD or BS_CHECKBOX or WS_TABSTOP,
+    0,
+    pDefaultParentWindow,
+    cast[pointer](checkBox)
+  )
+  # WS_TABSTOP does not work, why?
+  pCheckboxOrigWndProc = pSetWindowLongPtr(checkBox.fHandle, GWLP_WNDPROC, pCheckBoxWndProc)
+  checkBox.CheckBox.init()
+
+method `text=`(checkBox: NativeCheckBox, text: string) =
+  procCall checkBox.CheckBox.`text=`(text)
+  pSetWindowText(checkBox.fHandle, text)
+
+method enabled(checkBox: NativeCheckBox): bool = checkBox.fEnabled
+
+method `enabled=`(checkBox: NativeCheckBox, enabled: bool) =
+  checkBox.fEnabled = enabled
+  discard EnableWindow(checkBox.fHandle, enabled)
+
+method checked(checkBox: NativeCheckBox): bool = checkBox.fChecked
+
+method `checked=`(checkBox: NativeCheckBox, checked: bool) =
+  checkBox.fChecked = checked
+  discard SendMessageA(checkBox.fHandle, BM_SETCHECK, cast[pointer](checked), nil)
+
+
+# ----------------------------------------------------------------------------------------
+#                                      ComboBox
+# ----------------------------------------------------------------------------------------
+
+var pComboBoxOrigWndProc: pointer
+
+proc pComboBoxWndProc(hWnd: pointer, uMsg: int32, wParam, lParam: pointer): pointer {.cdecl.} =
+  # case uMsg
+  # of WM_KEYDOWN, WM_LBUTTONUP:
+  #   let checkBox = cast[CheckBox](pGetWindowLongPtr(hWnd, GWLP_USERDATA))
+  #   let keyCode = if uMsg == WM_KEYDOWN: cast[int](wParam) else: 32
+  #   if checkBox != nil and keyCode == 32:
+  #     checkBox.fChecked = not checkBox.fChecked
+  #     discard SendMessageA(checkBox.fHandle, BM_SETCHECK, cast[pointer](checkBox.fChecked), nil)
+
+  #     var event = new CheckBoxToggleEvent
+  #     event.control = checkBox
+  #     event.checked = checkBox.fChecked
+  #     checkBox.handleToggleEvent(event)
+  # else:
+  #   discard
+  result = pCommonControlWndProc(pComboBoxOrigWndProc, hWnd, uMsg, wParam, lParam)
+
+# proc `height=`(comboBox: NativeComboBox, val: int) =
+# proc height(comboBox: NativeComboBox): int =
+#   quit()
+#   return 500
+
+proc init(comboBox: NativeComboBox) =
+  # var
+  #   dwExStyle: cint = 0
+  #   lpClassName = "COMBOBOX"
+  #   # lpWindowName = nil
+  #   # dwStyle: int32 = CBS_DROPDOWNLIST or WS_CHILD or WS_TABSTOP or WS_OVERLAPPED or WS_VISIBLE or CBS_HASSTRINGS or CBS_OWNERDRAWFIXED
+  #   dwStyle: int32 = CBS_DROPDOWN or CBS_HASSTRINGS or WS_CHILD or WS_OVERLAPPED or WS_VISIBLE or CBS_OWNERDRAWVARIABLE or WS_VSCROLL
+  # discard CreateWindowExA(dwExStyle, lpClassName, nil, dwStyle, 10, 10, 200, 200, pDefaultParentWindow, nil, nil, nil)
+  # CreateWindowExA(dwExStyle, lpClassName, lpWindowName, dwStyle, 0, 0, 75, 23, pDefaultParentWindow, hMenu, hInstance, lpParam)
+  # result = pCreateWindowEx(dwExStyle, lpClassName, nil, dwStyle, 0, 0, 0, 0, hWndParent, nil, nil, nil)
+  # if userdata != nil:
+  #   discard pSetWindowLongPtr(result, GWLP_USERDATA, userdata)
+
+  # CBS_HASSTRINGS | WS_OVERLAPPED | WS_VISIBLE
+  comboBox.fHandle = pCreateWindowExWithUserdata(
+    "COMBOBOX",
+    WS_VISIBLE or WS_CHILD or CBS_DROPDOWNLIST or WS_VSCROLL, #or CBS_AUTOHSCROLL,  # Styles WS_VSCROLL or BS_DEFSPLITBUTTON WS_DISABLED or
+    0,
+    pDefaultParentWindow,
+    cast[pointer](comboBox),
+    0,
+    0,
+    100,
+    200
+  )
+  # comboBox.height=50
+  # pSetWindowPos(comboBox.fHandle, 0, 0, 100, 200)
+  # comboBox.fHandle = CreateWindowExA(
+  #       0,
+  #       "COMBOBOX",  # Predefined class; Unicode assumed
+  #       "",      # Button text
+  #       WS_VISIBLE or WS_CHILD or CBS_DROPDOWNLIST or BS_DEFSPLITBUTTON or CBS_DROPDOWN or CBS_HASSTRINGS or WS_VSCROLL or CBS_HASSTRINGS,  # Styles WS_VSCROLL or BS_DEFSPLITBUTTON WS_DISABLED or
+  #       0,         # x position
+  #       0,         # y position
+  #       100,        # Button width
+  #       200,        # Button height
+  #       pDefaultParentWindow,     # Parent window
+  #       nil, #(HMENU)IDC_CHANNEL_COUT_BUTTON, # menu.
+  #       nil, #(HINSTANCE)GetWindowLong(hWnd, GWL_HINSTANCE),
+  #       nil)
+  # discard pSetWindowLongPtr(comboBox.fHandle, GWLP_USERDATA, cast[pointer](comboBox))
+  # WS_TABSTOP does not work, why?
+  pComboboxOrigWndProc = pSetWindowLongPtr(comboBox.fHandle, GWLP_WNDPROC, pComboBoxWndProc)
+  comboBox.ComboBox.init()
+  comboBox.fHeight = 23
+
+# method checked(checkBox: NativeComboBox): bool = checkBox.fChecked
+# method `checked=`(checkBox: NativeComboBox, checked: bool) =
+#   checkBox.fChecked = checked
+#   discard SendMessageA(checkBox.fHandle, BM_SETCHECK, cast[pointer](checked), nil)
+
+method append(comboBox: NativeComboBox, value: string, text: string) =
+  discard SendMessageA(comboBox.fHandle, CB_ADDSTRING, nil, cast[pointer](text.cstring))
+  let position: int = cast[int](SendMessageA(comboBox.fHandle, CB_GETCOUNT, nil, nil)) - 1
+  discard SendMessageA(comboBox.fHandle, CB_SETITEMDATA, cast[pointer](position), cast[pointer](value.cstring))
+
+method prepend(comboBox: NativeComboBox, value: string, text: string) =
+  discard SendMessageA(comboBox.fHandle, CB_INSERTSTRING, cast[pointer](0), cast[pointer](text.cstring))
+  discard SendMessageA(comboBox.fHandle, CB_SETITEMDATA, cast[pointer](0), cast[pointer](value.cstring))
+
+method insert(comboBox: NativeComboBox, position: int, value: string, text: string) =
+  discard SendMessageA(comboBox.fHandle, CB_INSERTSTRING, cast[pointer](position), cast[pointer](text.cstring))
+  discard SendMessageA(comboBox.fHandle, CB_SETITEMDATA, cast[pointer](position), cast[pointer](value.cstring))
+
+method remove(comboBox: NativeComboBox, position: int) =
+  discard # gtk_combo_box_text_remove(comboBox.fHandle, position.cint)
+
+method clear(comboBox: NativeComboBox) =
+  discard # gtk_combo_box_text_remove_all(comboBox.fHandle)
+
+method enabled(checkBox: NativeComboBox): bool = checkBox.fEnabled
+method `enabled=`(checkBox: NativeComboBox, enabled: bool) =
+  checkBox.fEnabled = enabled
+  discard EnableWindow(checkBox.fHandle, enabled)
+
+method `selectedIndex=`(comboBox: NativeComboBox, index: int) =
+  discard SendMessageA(comboBox.fHandle, CB_SETCURSEL, cast[pointer](index), nil)
+
+method `selectedValue=`(comboBox: NativeComboBox, value: string) =
+  # TODO: Replace this by an highlevel item list
+  let listCount: int = cast[int](SendMessageA(comboBox.fHandle, CB_GETCOUNT, nil, nil))
+  var tempValue: string
+  for idx in 0..listCount - 1:
+    tempValue = $cast[cstring](SendMessageA(comboBox.fHandle, CB_GETITEMDATA, cast[pointer](idx), nil))
+    if value == tempValue:
+      discard SendMessageA(comboBox.fHandle, CB_SETCURSEL, cast[pointer](idx), nil)
+      break
+
+method `selectedText=`(comboBox: NativeComboBox, text: string) =
+  let index: int = cast[int](SendMessageA(comboBox.fHandle, CB_FINDSTRINGEXACT, cast[pointer](-1), text.cstring))
+  discard SendMessageA(comboBox.fHandle, CB_SETCURSEL, cast[pointer](index), nil)
 
 
 # ----------------------------------------------------------------------------------------
