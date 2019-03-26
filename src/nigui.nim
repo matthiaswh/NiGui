@@ -605,7 +605,6 @@ proc init*(control: ControlImpl)
 
 proc dispose*(control: var Control)
 method dispose*(control: Control)
-method dispose*(button: var Button)
 
 proc disposed*(control: Control): bool
 
@@ -1384,31 +1383,25 @@ proc init(control: Control) =
   # should be extended by WindowImpl
 
 method destroy(control: Control) =
-  discard # nothing to do here
-  # should be extended by ControlImpl
+  let parent = cast[Container](control.fParentControl)
+  if parent != nil:
+    let idx = parent.fChildControls.find(control)
+    parent.fChildControls.del(idx)
+    parent.triggerRelayout()
+
+proc dispose(control: var Control) =
+  let c = control
+  c.dispose() # force calling "dispose(control: Control)" instead of itself
+  control = nil
 
 method dispose(control: Control) =
   let callback = control.onDispose
-  let parent = control.fParentControl
   if callback != nil:
     var event = new ControlDisposeEvent
     event.control = control
     callback(event)
   control.destroy()
   control.fDisposed = true
-  echo "relay"
-  if parent != nil:
-    parent.triggerRelayout()
-
-method dispose(button: var Button) =
-  let c = Control(button)
-  c.dispose()
-  # button = nil
-
-proc dispose(control: var Control) =
-  let c = control
-  c.dispose() # force calling "dispose(control: Control)" instead of itself
-  control = nil
 
 proc disposed(control: Control): bool = control == nil or control.fDisposed
 
@@ -1811,16 +1804,16 @@ method add(container: Container, control: Control) =
   container.triggerRelayout()
 
 method remove(container: Container, control: Control) =
-  # discard
-  if Control(container) != control.fParentControl:
-    raiseError("control can not be removed because it is not member of the container")
-  else:
-    let startIndex = control.fIndex
-    container.fChildControls.del(control.fIndex)
-    for i in startIndex..container.fChildControls.high:
-      container.fChildControls[i].fIndex = i
-    control.fParentControl = nil
-    container.triggerRelayout()
+  discard
+  # if Control(container) != control.fParentControl:
+  #   raiseError("control can not be removed because it is not member of the container")
+  # else:
+  #   let startIndex = control.fIndex
+  #   container.fChildControls.del(control.fIndex)
+  #   for i in startIndex..container.fChildControls.high:
+  #     container.fChildControls[i].fIndex = i
+  #   control.fParentControl = nil
+  #   container.triggerRelayout()
 
 method insert(container: Container, control: Control, idx: int) =
   if control.fParentControl != nil:
